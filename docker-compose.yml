@@ -142,7 +142,6 @@ services:
       - ${ROOT_DIR:-./root}/data:/data
       # - ${ROOT_DIR:-./root}/opt/init:/opt/init
       # - init:/opt/init
-    command: ./init.sh
     restart: "no"
 
 volumes:
