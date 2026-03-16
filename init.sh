@@ -311,40 +311,49 @@ curl -sS "$JELLYSEERR_URL/api/v1/settings/jellyfin/library?sync=true&enable=$LIB
 # curl 'http://localhost:5055/api/v1/settings/jellyfin/library?enable=f137a2dd21bbc1b99aa5c0f6bf02a805' \
 #   -b "$COOKIE_JAR" \
 
-# note: I set "syncEnabled":true
-# setup jellyseerr with radarr
-# radarr api key
-JELLYSEERR_SETTINGS_RADARR_PAYLOAD=$(jq -n \
-  --arg RADARR_API_KEY "$RADARR_API_KEY" \
-  --arg RADARR_INNER_ROOT "$RADARR_INNER_ROOT" \
-'{
-"name":"Radarr","hostname":"radarr","port":7878,"apiKey":$RADARR_API_KEY,"useSsl":false,"baseUrl":"","externalUrl":"http://localhost:7878","activeProfileId":1,"activeProfileName":"Any","activeDirectory":$RADARR_INNER_ROOT,"is4k":false,"minimumAvailability":"released","tags":[],"isDefault":true,"syncEnabled":true,"preventSearch":false,"tagRequests":false
-}'
-)
-JELLYSEERR_SETTINGS_RADARR_RESPONSE=$(
-  curl -sS "$JELLYSEERR_URL/api/v1/settings/radarr" \
-    -X POST \
-    -b "$COOKIE_JAR" \
-    -H 'Content-Type: application/json' \
-    --data-raw "$JELLYSEERR_SETTINGS_RADARR_PAYLOAD"
-)
+RADARR_EXISTS=$(curl -sS "$JELLYSEERR_URL/api/v1/settings/radarr" -H "Accept: application/json" -b "$COOKIE_JAR" | jq 'any(.[]; .hostname=="radarr")')
+SONARR_EXISTS=$(curl -sS "$JELLYSEERR_URL/api/v1/settings/sonarr" -H "Accept: application/json" -b "$COOKIE_JAR" | jq 'any(.[]; .hostname=="sonarr")')
 
-# setup jellyseerr with sonarr
-# sonarr api key
-JELLYSEERR_SETTINGS_SONARR_PAYLOAD=$(jq -n \
-  --arg SONARR_API_KEY "$SONARR_API_KEY" \
-  --arg SONARR_INNER_ROOT "$SONARR_INNER_ROOT" \
-'{
-"name":"Sonarr","hostname":"sonarr","port":8989,"apiKey":$SONARR_API_KEY,"useSsl":false,"baseUrl":"","externalUrl":"http://localhost:8989","activeProfileId":1,"activeProfileName":"Any","activeDirectory":$SONARR_INNER_ROOT,"activeAnimeDirectory":"","tags":[],"animeTags":[],"is4k":false,"isDefault":true,"enableSeasonFolders":false,"syncEnabled":true,"preventSearch":false,"tagRequests":false
-}'
-)
-JELLYSEERR_SETTINGS_SONARR_RESPONSE=$(
-  curl -sS "$JELLYSEERR_URL/api/v1/settings/sonarr" \
-    -X POST \
-    -b "$COOKIE_JAR" \
-    -H 'Content-Type: application/json' \
-    --data-raw "$JELLYSEERR_SETTINGS_SONARR_PAYLOAD"
-)
+if [ "$RADARR_EXISTS" != "true" ]; then
+  echo "Setting up Jellyseerr with Radarr..."
+  # note: I set "syncEnabled":true
+  JELLYSEERR_SETTINGS_RADARR_PAYLOAD=$(jq -n \
+    --arg RADARR_API_KEY "$RADARR_API_KEY" \
+    --arg RADARR_INNER_ROOT "$RADARR_INNER_ROOT" \
+  '{
+  "name":"Radarr","hostname":"radarr","port":7878,"apiKey":$RADARR_API_KEY,"useSsl":false,"baseUrl":"","externalUrl":"http://localhost:7878","activeProfileId":1,"activeProfileName":"Any","activeDirectory":$RADARR_INNER_ROOT,"is4k":false,"minimumAvailability":"released","tags":[],"isDefault":true,"syncEnabled":true,"preventSearch":false,"tagRequests":false
+  }'
+  )
+  JELLYSEERR_SETTINGS_RADARR_RESPONSE=$(
+    curl -sS "$JELLYSEERR_URL/api/v1/settings/radarr" \
+      -X POST \
+      -b "$COOKIE_JAR" \
+      -H 'Content-Type: application/json' \
+      --data-raw "$JELLYSEERR_SETTINGS_RADARR_PAYLOAD"
+  )
+else
+  echo "Jellyseerr and Radarr already configured, skipping..."
+fi
+
+if [ "$SONARR_EXISTS" != "true" ]; then
+  echo "Setting up Jellyseerr with Sonarr..."
+  JELLYSEERR_SETTINGS_SONARR_PAYLOAD=$(jq -n \
+    --arg SONARR_API_KEY "$SONARR_API_KEY" \
+    --arg SONARR_INNER_ROOT "$SONARR_INNER_ROOT" \
+  '{
+  "name":"Sonarr","hostname":"sonarr","port":8989,"apiKey":$SONARR_API_KEY,"useSsl":false,"baseUrl":"","externalUrl":"http://localhost:8989","activeProfileId":1,"activeProfileName":"Any","activeDirectory":$SONARR_INNER_ROOT,"activeAnimeDirectory":"","tags":[],"animeTags":[],"is4k":false,"isDefault":true,"enableSeasonFolders":false,"syncEnabled":true,"preventSearch":false,"tagRequests":false
+  }'
+  )
+  JELLYSEERR_SETTINGS_SONARR_RESPONSE=$(
+    curl -sS "$JELLYSEERR_URL/api/v1/settings/sonarr" \
+      -X POST \
+      -b "$COOKIE_JAR" \
+      -H 'Content-Type: application/json' \
+      --data-raw "$JELLYSEERR_SETTINGS_SONARR_PAYLOAD"
+  )
+else
+  echo "Jellyseerr and Sonarr already configured, skipping..."
+fi
 
 # initialize
 JELLYSEERR_SETTINGS_INITIALIZE_RESPONSE=$(
