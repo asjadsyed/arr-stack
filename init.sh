@@ -190,6 +190,7 @@ TOKEN=$(echo "$JELLYFIN_AUTHENTICATE_BY_NAME_RESPONSE" | jq -r .AccessToken)
 echo "$TOKEN"
 
 APPS=(
+  "Jellyseerr"
   "Radarr"
   "Sonarr"
 )
@@ -215,6 +216,7 @@ done
 # for k in "${!JELLYFIN_API_KEYS[@]}"; do
 #   echo "$k => ${JELLYFIN_API_KEYS[$k]}"
 # done
+echo "${JELLYFIN_API_KEYS["Jellyseerr"]}"
 echo "${JELLYFIN_API_KEYS["Radarr"]}"
 echo "${JELLYFIN_API_KEYS["Sonarr"]}"
 
@@ -267,6 +269,21 @@ fi
 
 cat "$COOKIE_JAR"
 
+# Set External URL for Jellyfin to localhost:8096 in Jellyseerr settings
+JELLYFIN_JELLYSEERR_SETTINGS_PAYLOAD=$(jq -n \
+  --arg JELLYFIN_JELLYSEERR_API_KEY "${JELLYFIN_API_KEYS["Jellyseerr"]}" \
+'{
+  "ip":"jellyfin","port":8096,"useSsl":false,"urlBase":"","externalHostname":"http://localhost:8096","jellyfinForgotPasswordUrl":"","apiKey":$JELLYFIN_JELLYSEERR_API_KEY
+}'
+)
+JELLYFIN_JELLYSEERR_SETTINGS_RESPONSE=$(
+    curl -sS "$JELLYSEERR_URL/api/v1/settings/jellyfin" \
+      -X POST \
+      -b "$COOKIE_JAR" \
+      -H "Content-Type: application/json" \
+      --data-raw "$JELLYFIN_JELLYSEERR_SETTINGS_PAYLOAD"
+)
+
 # Sync Jellyseerr with Jellyfin libraries
 # Jellyseerr Jellyfin Manual Library Scan
 PAYLOAD='{"start":true}'
@@ -301,7 +318,7 @@ JELLYSEERR_SETTINGS_RADARR_PAYLOAD=$(jq -n \
   --arg RADARR_API_KEY "$RADARR_API_KEY" \
   --arg RADARR_INNER_ROOT "$RADARR_INNER_ROOT" \
 '{
-"name":"Radarr","hostname":"radarr","port":7878,"apiKey":$RADARR_API_KEY,"useSsl":false,"baseUrl":"","activeProfileId":1,"activeProfileName":"Any","activeDirectory":$RADARR_INNER_ROOT,"is4k":false,"minimumAvailability":"released","tags":[],"isDefault":true,"syncEnabled":true,"preventSearch":false,"tagRequests":false
+"name":"Radarr","hostname":"radarr","port":7878,"apiKey":$RADARR_API_KEY,"useSsl":false,"baseUrl":"","externalUrl":"http://localhost:7878","activeProfileId":1,"activeProfileName":"Any","activeDirectory":$RADARR_INNER_ROOT,"is4k":false,"minimumAvailability":"released","tags":[],"isDefault":true,"syncEnabled":true,"preventSearch":false,"tagRequests":false
 }'
 )
 JELLYSEERR_SETTINGS_RADARR_RESPONSE=$(
@@ -318,7 +335,7 @@ JELLYSEERR_SETTINGS_SONARR_PAYLOAD=$(jq -n \
   --arg SONARR_API_KEY "$SONARR_API_KEY" \
   --arg SONARR_INNER_ROOT "$SONARR_INNER_ROOT" \
 '{
-"name":"Sonarr","hostname":"sonarr","port":8989,"apiKey":$SONARR_API_KEY,"useSsl":false,"baseUrl":"","activeProfileId":1,"activeProfileName":"Any","activeDirectory":$SONARR_INNER_ROOT,"activeAnimeDirectory":"","tags":[],"animeTags":[],"is4k":false,"isDefault":true,"enableSeasonFolders":false,"syncEnabled":true,"preventSearch":false,"tagRequests":false
+"name":"Sonarr","hostname":"sonarr","port":8989,"apiKey":$SONARR_API_KEY,"useSsl":false,"baseUrl":"","externalUrl":"http://localhost:8989","activeProfileId":1,"activeProfileName":"Any","activeDirectory":$SONARR_INNER_ROOT,"activeAnimeDirectory":"","tags":[],"animeTags":[],"is4k":false,"isDefault":true,"enableSeasonFolders":false,"syncEnabled":true,"preventSearch":false,"tagRequests":false
 }'
 )
 JELLYSEERR_SETTINGS_SONARR_RESPONSE=$(
