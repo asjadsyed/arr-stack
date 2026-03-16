@@ -1,0 +1,157 @@
+services:
+  jellyfin:
+    image: lscr.io/linuxserver/jellyfin:latest
+    # image: lscr.io/linuxserver/jellyfin:9021fedca4c0
+    container_name: jellyfin
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - UMASK=002
+      - TZ=America/New_York
+      # Optional - alternative address used for autodiscovery
+      # - JELLYFIN_PublishedServerUrl=http://example.com
+      - JELLYFIN_PublishedServerUrl=http://localhost:8096
+    ports:
+      - 8096:8096/tcp # HTTP
+      - 8920:8920/tcp # HTTPS
+      - 7359:7359/udp
+      - 1900:1900/udp
+    volumes:
+      - ${ROOT_DIR:-./root}/config/jellyfin-config:/config
+      - ${ROOT_DIR:-./root}/cache/jellyfin-cache:/cache
+      - ${ROOT_DIR:-./root}/data:/data
+    restart: "unless-stopped"
+    # Optional - may be necessary for docker healthcheck to pass if running in host network mode
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    # healthcheck:
+    #   test: ["CMD-SHELL", "curl -fsS --max-time 5 http://127.0.0.1:8096/health >/dev/null || exit 1"]
+    #   interval: 30s
+    #   timeout: 10s
+    #   retries: 5
+    #   start_period: 45s
+
+  jellyseerr:
+    image: fallenbagel/jellyseerr:latest
+    # image: fallenbagel/jellyseerr:2742757d9c41 # 2.7.3
+    container_name: jellyseerr
+    environment:
+      - TZ=America/New_York
+    ports:
+      - 5055:5055
+    volumes:
+      - ${ROOT_DIR:-./root}/config/jellyseerr-config:/app/config
+    restart: unless-stopped
+
+  radarr:
+    image: lscr.io/linuxserver/radarr:latest
+    # image: lscr.io/linuxserver/radarr:ad5cf9c31abe
+    container_name: radarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - UMASK=002
+      - TZ=America/New_York
+    ports:
+      - 7878:7878
+    volumes:
+      - ${ROOT_DIR:-./root}/config/radarr-config:/config
+      # You are using docker; download client qBittorrent places downloads in /data/torrents but this directory does not appear to exist inside the container. Review your remote path mappings and container volume settings.
+      - ${ROOT_DIR:-./root}/data:/data
+    restart: unless-stopped
+
+  sonarr:
+    image: lscr.io/linuxserver/sonarr:latest
+    # image: lscr.io/linuxserver/sonarr:7e6983e0d796
+    container_name: sonarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - UMASK=002
+      - TZ=America/New_York
+    ports:
+      - 8989:8989
+    volumes:
+      - ${ROOT_DIR:-./root}/config/sonarr-config:/config
+      - ${ROOT_DIR:-./root}/data:/data
+      - ${ROOT_DIR:-./root}/opt/sonarr:/opt/sonarr
+    restart: unless-stopped
+
+  # lidarr:
+  #  image: lscr.io/linuxserver/lidarr:latest
+  #  # image: lscr.io/linuxserver/lidarr:feb69c3671ec
+  #  container_name: lidarr
+  #  environment:
+  #    - PUID=1000
+  #    - PGID=1000
+  #    - TZ=America/New_York
+  #  ports:
+  #    - 8686:8686
+  #  volumes:
+  #    - ${ROOT_DIR:-./root}/config/lidarr-config:/config
+  #    - ${ROOT_DIR:-./root}/data:/data
+  #  restart: unless-stopped
+
+  prowlarr:
+    image: lscr.io/linuxserver/prowlarr:latest
+    # image: lscr.io/linuxserver/prowlarr:4142daf406e4
+    container_name: prowlarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - UMASK=002
+      - TZ=America/New_York
+    ports:
+      - 9696:9696
+    volumes:
+      - ${ROOT_DIR:-./root}/config/prowlarr-config:/config
+    restart: unless-stopped
+
+  qbittorrent:
+    image: lscr.io/linuxserver/qbittorrent:latest
+    # image: lscr.io/linuxserver/qbittorrent:c3b2f778cfd7
+    build:
+      context: .
+      dockerfile: qbittorrent.Dockerfile
+    container_name: qbittorrent
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - UMASK=002
+      - TZ=America/New_York
+      - WEBUI_PORT=8080
+      - TORRENTING_PORT=6881
+    ports:
+      - 8080:8080
+      - 6881:6881
+      - 6881:6881/udp
+    volumes:
+      - qbittorrent_config:/config
+      - ${ROOT_DIR:-./root}/data:/data
+    restart: unless-stopped
+
+  init:
+    # http://localhost:7878/settings/mediamanagement
+    # http://localhost:8989/settings/mediamanagement
+    build:
+      context: .
+      dockerfile: init.Dockerfile
+    container_name: init
+    depends_on:
+      jellyfin: { condition: service_started }
+      jellyseerr: { condition: service_started }
+      radarr: { condition: service_started }
+      sonarr: { condition: service_started }
+      prowlarr: { condition: service_started }
+      qbittorrent: { condition: service_started }
+    volumes:
+      - ${ROOT_DIR:-./root}/config/:/config/:ro
+      - ${ROOT_DIR:-./root}/data:/data
+      # - ${ROOT_DIR:-./root}/opt/init:/opt/init
+      # - init:/opt/init
+    command: ./init.sh
+    restart: "no"
+
+volumes:
+  qbittorrent_config:
+  # init:
