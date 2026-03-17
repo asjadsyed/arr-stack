@@ -3,11 +3,11 @@
 set -euo pipefail
 set -x
 
-JELLYFIN_USERNAME="jellyfin-user"
-JELLYFIN_PASSWORD="changeme"
+JELLYFIN_USERNAME="${JELLYFIN_USERNAME}"
+JELLYFIN_PASSWORD="${JELLYFIN_PASSWORD}"
 JELLYFIN_URL=http://jellyfin:8096
 JELLYSEERR_URL=http://jellyseerr:5055
-JELLYSEERR_EMAIL="jellyseerr-user@example.com"
+JELLYSEERR_EMAIL="${JELLYSEERR_EMAIL}"
 RADARR_URL="http://radarr:7878"
 SONARR_URL="http://sonarr:8989"
 PROWLARR_URL="http://prowlarr:9696"
@@ -17,14 +17,15 @@ RADARR_INNER_ROOT="/data/media/$RADARR_CATEGORY"
 SONARR_INNER_ROOT="/data/media/$SONARR_CATEGORY"
 RADARR_ROOT="/data/media/$RADARR_CATEGORY"
 SONARR_ROOT="/data/media/$SONARR_CATEGORY"
-RADARR_USERNAME="radarr-user"
-RADARR_PASSWORD="changeme"
-SONARR_USERNAME="sonarr-user"
-SONARR_PASSWORD="changeme"
-PROWLARR_USERNAME="prowlarr-user"
-PROWLARR_PASSWORD="changeme"
-QBITTORRENT_PASSWORD="adminadmin"
-sleep 10
+RADARR_USERNAME="${RADARR_USERNAME}"
+RADARR_PASSWORD="${RADARR_PASSWORD}"
+SONARR_USERNAME="${SONARR_USERNAME}"
+SONARR_PASSWORD="${SONARR_PASSWORD}"
+PROWLARR_USERNAME="${PROWLARR_USERNAME}"
+PROWLARR_PASSWORD="${PROWLARR_PASSWORD}"
+QBITTORRENT_USERNAME="${QBITTORRENT_USERNAME}"
+QBITTORRENT_PASSWORD="${QBITTORRENT_PASSWORD}"
+# sleep 10
 
 mkdir -p /data/torrents
 mkdir -p /data/torrents/incomplete
@@ -446,8 +447,9 @@ SONARR_ROOT_FOLDER_RESPONSE=$(
     -d "{\"path\":\"$SONARR_INNER_ROOT\"}"
 )
 
-sleep 5
+# sleep 5
 RADARR_DOWNLOAD_CLIENT_PAYLOAD=$(jq -n \
+  --arg QBITTORRENT_USERNAME "$QBITTORRENT_USERNAME" \
   --arg QBITTORRENT_PASSWORD "$QBITTORRENT_PASSWORD" \
   --arg RADARR_CATEGORY "$RADARR_CATEGORY" \
 '{
@@ -462,7 +464,7 @@ RADARR_DOWNLOAD_CLIENT_PAYLOAD=$(jq -n \
     {"name": "port","value": 8080},
     {"name": "useSsl","value": false},
     {"name": "urlBase"},
-    {"name": "username","value": "admin"},
+    {"name": "username","value": $QBITTORRENT_USERNAME},
     {"name": "password","value": $QBITTORRENT_PASSWORD},
     {"name": "movieCategory","value": $RADARR_CATEGORY},
     {"name": "movieImportedCategory"},
@@ -491,6 +493,7 @@ RADARR_DOWNLOAD_CLIENT_RESPONSE=$(
 )
 
 SONARR_DOWNLOAD_CLIENT_PAYLOAD=$(jq -n \
+  --arg QBITTORRENT_USERNAME "$QBITTORRENT_USERNAME" \
   --arg QBITTORRENT_PASSWORD "$QBITTORRENT_PASSWORD" \
   --arg SONARR_CATEGORY "$SONARR_CATEGORY" \
 '{
@@ -505,7 +508,7 @@ SONARR_DOWNLOAD_CLIENT_PAYLOAD=$(jq -n \
     {"name": "port","value": 8080},
     {"name": "useSsl","value": false},
     {"name": "urlBase"},
-    {"name": "username","value": "admin"},
+    {"name": "username","value": $QBITTORRENT_USERNAME},
     {"name": "password","value": $QBITTORRENT_PASSWORD},
     {"name": "tvCategory","value": $SONARR_CATEGORY},
     {"name": "tvImportedCategory"},

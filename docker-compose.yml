@@ -143,6 +143,20 @@ services:
       # - ${ROOT_DIR:-./root}/opt/init:/opt/init
       # - init:/opt/init
     restart: "no"
+    env_file:
+      - .env
+    environment:
+      - JELLYFIN_USERNAME=${JELLYFIN_USERNAME}
+      - JELLYFIN_PASSWORD=${JELLYFIN_PASSWORD}
+      - JELLYSEERR_EMAIL=${JELLYSEERR_EMAIL}
+      - RADARR_USERNAME=${RADARR_USERNAME}
+      - RADARR_PASSWORD=${RADARR_PASSWORD}
+      - SONARR_USERNAME=${SONARR_USERNAME}
+      - SONARR_PASSWORD=${SONARR_PASSWORD}
+      - PROWLARR_USERNAME=${PROWLARR_USERNAME}
+      - PROWLARR_PASSWORD=${PROWLARR_PASSWORD}
+      - QBITTORRENT_USERNAME=${QBITTORRENT_USERNAME}
+      - QBITTORRENT_PASSWORD=${QBITTORRENT_PASSWORD}
 
 volumes:
   qbittorrent_config:
