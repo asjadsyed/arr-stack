@@ -54,16 +54,17 @@ echo "RADARR_API_KEY: $RADARR_API_KEY"
 echo "SONARR_API_KEY: $SONARR_API_KEY"
 echo "PROWLARR_API_KEY: $PROWLARR_API_KEY"
 
-curl -sS --retry 120 --retry-delay 1 --retry-connrefused "$JELLYFIN_URL/System/Info/Public" >/dev/null
-until curl -sS -H "X-Api-Key: $RADARR_API_KEY" "$RADARR_URL/api/v3/system/status" >/dev/null; do sleep 2; done
-until curl -sS -H "X-Api-Key: $SONARR_API_KEY" "$SONARR_URL/api/v3/system/status" >/dev/null; do sleep 2; done
-until curl -sS -H "X-Api-Key: $PROWLARR_API_KEY" "$PROWLARR_URL/api/v3/system/status" >/dev/null; do sleep 2; done
+# curl -sS --retry 120 --retry-delay 1 --retry-connrefused "$JELLYFIN_URL/System/Info/Public" >/dev/null
+until curl -fsS "$JELLYFIN_URL/health" >/dev/null; do sleep 1; done
+until curl -fsS -H "X-Api-Key: $RADARR_API_KEY" "$RADARR_URL/api/v3/system/status" >/dev/null; do sleep 1; done
+until curl -fsS -H "X-Api-Key: $SONARR_API_KEY" "$SONARR_URL/api/v3/system/status" >/dev/null; do sleep 1; done
+until curl -fsS -H "X-Api-Key: $PROWLARR_API_KEY" "$PROWLARR_URL/api/v1/system/status" >/dev/null; do sleep 1; done
 
 JELLYFIN_AUTHORIZATION_HEADER='Authorization: MediaBrowser Client="setup", Device="docker", DeviceId="setup-1", Version="10.10.7"'
 
 
 JELLYFIN_CONFIGURATION_PAYLOAD='{"UICulture":"en-US","MetadataCountryCode":"US","PreferredMetadataLanguage":"en"}'
-JELLYFIN_CONFIGURATION_PAYLOAD=$(
+JELLYFIN_CONFIGURATION_RESPONSE=$(
   curl "$JELLYFIN_URL/Startup/Configuration" \
     -o /dev/null \
     -X POST \
