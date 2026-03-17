@@ -54,7 +54,7 @@ echo "RADARR_API_KEY: $RADARR_API_KEY"
 echo "SONARR_API_KEY: $SONARR_API_KEY"
 echo "PROWLARR_API_KEY: $PROWLARR_API_KEY"
 
-# curl -sS --retry 120 --retry-delay 1 --retry-connrefused "$JELLYFIN_URL/System/Info/Public" >/dev/null
+# curl -fsS --retry 120 --retry-delay 1 --retry-connrefused "$JELLYFIN_URL/System/Info/Public" >/dev/null
 until curl -fsS "$JELLYFIN_URL/health" >/dev/null; do sleep 1; done
 until curl -fsS -H "X-Api-Key: $RADARR_API_KEY" "$RADARR_URL/api/v3/system/status" >/dev/null; do sleep 1; done
 until curl -fsS -H "X-Api-Key: $SONARR_API_KEY" "$SONARR_URL/api/v3/system/status" >/dev/null; do sleep 1; done
@@ -65,7 +65,7 @@ JELLYFIN_AUTHORIZATION_HEADER='Authorization: MediaBrowser Client="setup", Devic
 
 JELLYFIN_CONFIGURATION_PAYLOAD='{"UICulture":"en-US","MetadataCountryCode":"US","PreferredMetadataLanguage":"en"}'
 JELLYFIN_CONFIGURATION_RESPONSE=$(
-  curl "$JELLYFIN_URL/Startup/Configuration" \
+  curl -fsS "$JELLYFIN_URL/Startup/Configuration" \
     -o /dev/null \
     -X POST \
     -H "$JELLYFIN_AUTHORIZATION_HEADER" \
@@ -75,7 +75,7 @@ JELLYFIN_CONFIGURATION_RESPONSE=$(
 
 # GET with side-effects
 JELLYFIN_SET_UP_DEFAULT_USER_RESPONSE=$(
-  curl "$JELLYFIN_URL/Startup/User" \
+  curl -fsS "$JELLYFIN_URL/Startup/User" \
     -o /dev/null \
     -H "$JELLYFIN_AUTHORIZATION_HEADER"
 )
@@ -88,7 +88,7 @@ JELLYFIN_SET_UP_ADMIN_USER_PAYLOAD=$(jq -n \
   "Password": $JELLYFIN_PASSWORD
 }')
 JELLYFIN_SET_UP_ADMIN_USER_RESPONSE=$(
-  curl "$JELLYFIN_URL/Startup/User" \
+  curl -fsS "$JELLYFIN_URL/Startup/User" \
     -X POST \
     -o /dev/null \
     -H "$JELLYFIN_AUTHORIZATION_HEADER" \
@@ -98,7 +98,7 @@ JELLYFIN_SET_UP_ADMIN_USER_RESPONSE=$(
 
 JELLYFIN_MOVIES_VALIDATE_PATH_PAYLOAD='{"Path":"/data/media/movies"}'
 JELLYFIN_MOVIES_VALIDATE_PATH_RESPONSE=$(
-  curl "$JELLYFIN_URL/Environment/ValidatePath" \
+  curl -fsS "$JELLYFIN_URL/Environment/ValidatePath" \
     -X POST \
     -o /dev/null \
     -H "$JELLYFIN_AUTHORIZATION_HEADER" \
@@ -108,7 +108,7 @@ JELLYFIN_MOVIES_VALIDATE_PATH_RESPONSE=$(
 
 JELLYFIN_MOVIES_VIRTUAL_FOLDERS_PAYLOAD='{"LibraryOptions":{"Enabled":true,"EnableArchiveMediaFiles":false,"EnablePhotos":true,"EnableRealtimeMonitor":true,"EnableLUFSScan":true,"ExtractTrickplayImagesDuringLibraryScan":false,"SaveTrickplayWithMedia":false,"EnableTrickplayImageExtraction":false,"ExtractChapterImagesDuringLibraryScan":false,"EnableChapterImageExtraction":false,"EnableInternetProviders":true,"SaveLocalMetadata":false,"EnableAutomaticSeriesGrouping":false,"PreferredMetadataLanguage":"","MetadataCountryCode":"","SeasonZeroDisplayName":"Specials","AutomaticRefreshIntervalDays":0,"EnableEmbeddedTitles":false,"EnableEmbeddedExtrasTitles":false,"EnableEmbeddedEpisodeInfos":false,"AllowEmbeddedSubtitles":"AllowAll","SkipSubtitlesIfEmbeddedSubtitlesPresent":false,"SkipSubtitlesIfAudioTrackMatches":false,"SaveSubtitlesWithMedia":true,"SaveLyricsWithMedia":false,"RequirePerfectSubtitleMatch":true,"AutomaticallyAddToCollection":false,"PreferNonstandardArtistsTag":false,"UseCustomTagDelimiters":false,"MetadataSavers":[],"TypeOptions":[{"Type":"Movie","MetadataFetchers":["TheMovieDb","The Open Movie Database"],"MetadataFetcherOrder":["TheMovieDb","The Open Movie Database"],"ImageFetchers":["TheMovieDb","The Open Movie Database","Embedded Image Extractor","Screen Grabber"],"ImageFetcherOrder":["TheMovieDb","The Open Movie Database","Embedded Image Extractor","Screen Grabber"]}],"LocalMetadataReaderOrder":["Nfo"],"SubtitleDownloadLanguages":[],"CustomTagDelimiters":["/","|",";","\\"],"DelimiterWhitelist":[],"DisabledSubtitleFetchers":[],"SubtitleFetcherOrder":[],"DisabledLyricFetchers":[],"LyricFetcherOrder":[],"PathInfos":[{"Path":"/data/media/movies"}]}}'
 JELLYFIN_MOVIES_VIRTUAL_FOLDERS_RESPONSE=$(
-  curl "$JELLYFIN_URL/Library/VirtualFolders?collectionType=movies&refreshLibrary=false&name=Movies" \
+  curl -fsS "$JELLYFIN_URL/Library/VirtualFolders?collectionType=movies&refreshLibrary=false&name=Movies" \
     -X POST \
     -o /dev/null \
     -H "$JELLYFIN_AUTHORIZATION_HEADER" \
@@ -118,7 +118,7 @@ JELLYFIN_MOVIES_VIRTUAL_FOLDERS_RESPONSE=$(
 
 JELLYFIN_SHOWS_VALIDATE_PATH_PAYLOAD='{"Path":"/data/media/shows"}'
 JELLYFIN_SHOWS_VALIDATE_PATH_RESPONSE=$(
-  curl "$JELLYFIN_URL/Environment/ValidatePath" \
+  curl -fsS "$JELLYFIN_URL/Environment/ValidatePath" \
     -X POST \
     -o /dev/null \
     -H "$JELLYFIN_AUTHORIZATION_HEADER" \
@@ -128,7 +128,7 @@ JELLYFIN_SHOWS_VALIDATE_PATH_RESPONSE=$(
 
 JELLYFIN_SHOWS_VIRTUAL_FOLDERS_PAYLOAD='{"LibraryOptions":{"Enabled":true,"EnableArchiveMediaFiles":false,"EnablePhotos":true,"EnableRealtimeMonitor":true,"EnableLUFSScan":true,"ExtractTrickplayImagesDuringLibraryScan":false,"SaveTrickplayWithMedia":false,"EnableTrickplayImageExtraction":false,"ExtractChapterImagesDuringLibraryScan":false,"EnableChapterImageExtraction":false,"EnableInternetProviders":true,"SaveLocalMetadata":false,"EnableAutomaticSeriesGrouping":false,"PreferredMetadataLanguage":"","MetadataCountryCode":"","SeasonZeroDisplayName":"Specials","AutomaticRefreshIntervalDays":0,"EnableEmbeddedTitles":false,"EnableEmbeddedExtrasTitles":false,"EnableEmbeddedEpisodeInfos":false,"AllowEmbeddedSubtitles":"AllowAll","SkipSubtitlesIfEmbeddedSubtitlesPresent":false,"SkipSubtitlesIfAudioTrackMatches":false,"SaveSubtitlesWithMedia":true,"SaveLyricsWithMedia":false,"RequirePerfectSubtitleMatch":true,"AutomaticallyAddToCollection":false,"PreferNonstandardArtistsTag":false,"UseCustomTagDelimiters":false,"MetadataSavers":[],"TypeOptions":[{"Type":"Series","MetadataFetchers":["TheMovieDb","The Open Movie Database"],"MetadataFetcherOrder":["TheMovieDb","The Open Movie Database"],"ImageFetchers":["TheMovieDb"],"ImageFetcherOrder":["TheMovieDb"]},{"Type":"Season","MetadataFetchers":["TheMovieDb"],"MetadataFetcherOrder":["TheMovieDb"],"ImageFetchers":["TheMovieDb"],"ImageFetcherOrder":["TheMovieDb"]},{"Type":"Episode","MetadataFetchers":["TheMovieDb","The Open Movie Database"],"MetadataFetcherOrder":["TheMovieDb","The Open Movie Database"],"ImageFetchers":["TheMovieDb","The Open Movie Database","Embedded Image Extractor","Screen Grabber"],"ImageFetcherOrder":["TheMovieDb","The Open Movie Database","Embedded Image Extractor","Screen Grabber"]}],"LocalMetadataReaderOrder":["Nfo"],"SubtitleDownloadLanguages":[],"CustomTagDelimiters":["/","|",";","\\"],"DelimiterWhitelist":[],"DisabledSubtitleFetchers":[],"SubtitleFetcherOrder":[],"DisabledLyricFetchers":[],"LyricFetcherOrder":[],"PathInfos":[{"Path":"/data/media/shows"}]}}'
 JELLYFIN_SHOWS_VIRTUAL_FOLDERS_RESPONSE=$(
-  curl "$JELLYFIN_URL/Library/VirtualFolders?collectionType=tvshows&refreshLibrary=false&name=Shows" \
+  curl -fsS "$JELLYFIN_URL/Library/VirtualFolders?collectionType=tvshows&refreshLibrary=false&name=Shows" \
     -X POST \
     -o /dev/null \
     -H "$JELLYFIN_AUTHORIZATION_HEADER" \
@@ -138,7 +138,7 @@ JELLYFIN_SHOWS_VIRTUAL_FOLDERS_RESPONSE=$(
 
 JELLYFIN_CONFIGURATION_PAYLOAD='{"UICulture":"en-US","MetadataCountryCode":"US","PreferredMetadataLanguage":"en"}'
 JELLYFIN_CONFIGURATION_RESPONSE=$(
-  curl "$JELLYFIN_URL/Startup/Configuration" \
+  curl -fsS "$JELLYFIN_URL/Startup/Configuration" \
     -o /dev/null \
     -X POST \
     -H "$JELLYFIN_AUTHORIZATION_HEADER" \
@@ -148,7 +148,7 @@ JELLYFIN_CONFIGURATION_RESPONSE=$(
 
 JELLYFIN_REMOTE_ACCESS_PAYLOAD='{"EnableRemoteAccess":true,"EnableAutomaticPortMapping":false}'
 JELLYFIN_REMOTE_ACCESS_RESPONSE=$(
-  curl "$JELLYFIN_URL/Startup/RemoteAccess" \
+  curl -fsS "$JELLYFIN_URL/Startup/RemoteAccess" \
     -o /dev/null \
     -X POST \
     -H "$JELLYFIN_AUTHORIZATION_HEADER" \
@@ -157,7 +157,7 @@ JELLYFIN_REMOTE_ACCESS_RESPONSE=$(
 )
 
 JELLYFIN_COMPLETE_RESPONSE=$(
-  curl "$JELLYFIN_URL/Startup/Complete" \
+  curl -fsS "$JELLYFIN_URL/Startup/Complete" \
     -o /dev/null \
     -X POST \
     -H "$JELLYFIN_AUTHORIZATION_HEADER" \
@@ -180,7 +180,7 @@ JELLYFIN_AUTHENTICATE_BY_NAME_PAYLOAD=$(jq -n \
 }'
 )
 JELLYFIN_AUTHENTICATE_BY_NAME_RESPONSE=$(
-  curl -sS "$JELLYFIN_URL/Users/AuthenticateByName" \
+  curl -fsS "$JELLYFIN_URL/Users/AuthenticateByName" \
     -X POST \
     -H "Content-Type: application/json" \
     -H "$JELLYFIN_AUTHORIZATION_HEADER" \
@@ -196,15 +196,15 @@ APPS=(
 )
 
 # 3) List keys and create if missing
-LIST_KEYS=$(curl -s "$JELLYFIN_URL/Auth/Keys" -H "X-Emby-Token: $TOKEN")
+LIST_KEYS=$(curl -fsS "$JELLYFIN_URL/Auth/Keys" -H "X-Emby-Token: $TOKEN")
 declare -A JELLYFIN_API_KEYS
 for app in "${APPS[@]}"; do
   echo "$app"
   JELLYFIN_APP_API_KEY=$(echo "$LIST_KEYS" | jq -r --arg app "$app" '.Items[] | select(.AppName==$app) | .AccessToken' | head -n 1)
   if [[ -z "$JELLYFIN_APP_API_KEY" ]]; then
     echo "empty"
-    curl -s -X POST "$JELLYFIN_URL/Auth/Keys?app=$app" -H "X-Emby-Token: $TOKEN" -o /dev/null
-    LIST_KEYS=$(curl -s "$JELLYFIN_URL/Auth/Keys" -H "X-Emby-Token: $TOKEN")
+    curl -fsS -X POST "$JELLYFIN_URL/Auth/Keys?app=$app" -H "X-Emby-Token: $TOKEN" -o /dev/null
+    LIST_KEYS=$(curl -fsS "$JELLYFIN_URL/Auth/Keys" -H "X-Emby-Token: $TOKEN")
     JELLYFIN_APP_API_KEY=$(echo "$LIST_KEYS" | jq -r --arg app "$app" '.Items[] | select(.AppName==$app) | .AccessToken' | head -n 1)
   else
     echo "has value"
@@ -221,7 +221,7 @@ echo "${JELLYFIN_API_KEYS["Radarr"]}"
 echo "${JELLYFIN_API_KEYS["Sonarr"]}"
 
 # # Use the returned key with:
-# #   curl "$JELLYFIN_URL/Sessions" -H "X-MediaBrowser-Token: <API_KEY>"
+# #   curl -fsS "$JELLYFIN_URL/Sessions" -H "X-MediaBrowser-Token: <API_KEY>"
 
 # setup jellyseerr
 
@@ -249,7 +249,7 @@ JELLYSEERR_AUTH_JELLYFIN_BOOTSTRAP_PAYLOAD=$(jq -n \
 
 try_auth () {
   local payload="$1"
-  curl --fail -sS "$JELLYSEERR_URL/api/v1/auth/jellyfin" \
+  curl -fsS "$JELLYSEERR_URL/api/v1/auth/jellyfin" \
     -X POST \
     -c "$COOKIE_JAR" \
     -b "$COOKIE_JAR" \
@@ -277,7 +277,7 @@ JELLYFIN_JELLYSEERR_SETTINGS_PAYLOAD=$(jq -n \
 }'
 )
 JELLYFIN_JELLYSEERR_SETTINGS_RESPONSE=$(
-    curl -sS "$JELLYSEERR_URL/api/v1/settings/jellyfin" \
+    curl -fsS "$JELLYSEERR_URL/api/v1/settings/jellyfin" \
       -X POST \
       -b "$COOKIE_JAR" \
       -H "Content-Type: application/json" \
@@ -287,32 +287,30 @@ JELLYFIN_JELLYSEERR_SETTINGS_RESPONSE=$(
 # Sync Jellyseerr with Jellyfin libraries
 # Jellyseerr Jellyfin Manual Library Scan
 PAYLOAD='{"start":true}'
-curl -sS "$JELLYSEERR_URL/api/v1/settings/jellyfin/sync" \
+curl -fsS "$JELLYSEERR_URL/api/v1/settings/jellyfin/sync" \
   -X POST \
   -b "$COOKIE_JAR" \
   -H 'Content-Type: application/json' \
   --data-raw "$PAYLOAD"
 
-# LIBRARIES=$(curl "$JELLYSEERR_URL/api/v1/settings/jellyfin/library?sync=true" \
+# LIBRARIES=$(curl -fsS "$JELLYSEERR_URL/api/v1/settings/jellyfin/library?sync=true" \
 #   -b "$COOKIE_JAR"
 # )
 # echo "$LIBRARIES"
 # echo "$LIBRARIES" | jq .
 
-# curl -sS "$JELLYSEERR_URL/api/v1/settings/jellyfin/library?sync=true" -b "$COOKIE_JAR" | jq
-LIBRARY_IDS=$(curl -sS "$JELLYSEERR_URL/api/v1/settings/jellyfin/library?sync=true" -b "$COOKIE_JAR" | jq -r '.[].id' | paste -sd, -)
+# curl -fsS "$JELLYSEERR_URL/api/v1/settings/jellyfin/library?sync=true" -b "$COOKIE_JAR" | jq
+LIBRARY_IDS=$(curl -fsS "$JELLYSEERR_URL/api/v1/settings/jellyfin/library?sync=true" -b "$COOKIE_JAR" | jq -r '.[].id' | paste -sd, -)
 echo "$LIBRARY_IDS"
-curl -sS "$JELLYSEERR_URL/api/v1/settings/jellyfin/library?sync=true&enable=$LIBRARY_IDS" -b "$COOKIE_JAR"
+curl -fsS "$JELLYSEERR_URL/api/v1/settings/jellyfin/library?sync=true&enable=$LIBRARY_IDS" -b "$COOKIE_JAR"
 # exit
 
-# curl 'http://localhost:5055/api/v1/settings/jellyfin/library?enable=f137a2dd21bbc1b99aa5c0f6bf02a805,a656b907eb3a73532e40e44b968d0225' \
-#   -b "$COOKIE_JAR"
+# curl -fsS "$JELLYSEERR_URL/api/v1/settings/jellyfin/library?enable=f137a2dd21bbc1b99aa5c0f6bf02a805,a656b907eb3a73532e40e44b968d0225" -b "$COOKIE_JAR"
   
-# curl 'http://localhost:5055/api/v1/settings/jellyfin/library?enable=f137a2dd21bbc1b99aa5c0f6bf02a805' \
-#   -b "$COOKIE_JAR" \
+# curl -fsS "$JELLYSEERR_URL/api/v1/settings/jellyfin/library?enable=f137a2dd21bbc1b99aa5c0f6bf02a805" -b "$COOKIE_JAR"
 
-RADARR_EXISTS=$(curl -sS "$JELLYSEERR_URL/api/v1/settings/radarr" -H "Accept: application/json" -b "$COOKIE_JAR" | jq 'any(.[]; .hostname=="radarr")')
-SONARR_EXISTS=$(curl -sS "$JELLYSEERR_URL/api/v1/settings/sonarr" -H "Accept: application/json" -b "$COOKIE_JAR" | jq 'any(.[]; .hostname=="sonarr")')
+RADARR_EXISTS=$(curl -fsS "$JELLYSEERR_URL/api/v1/settings/radarr" -H "Accept: application/json" -b "$COOKIE_JAR" | jq 'any(.[]; .hostname=="radarr")')
+SONARR_EXISTS=$(curl -fsS "$JELLYSEERR_URL/api/v1/settings/sonarr" -H "Accept: application/json" -b "$COOKIE_JAR" | jq 'any(.[]; .hostname=="sonarr")')
 
 if [ "$RADARR_EXISTS" != "true" ]; then
   echo "Setting up Jellyseerr with Radarr..."
@@ -325,7 +323,7 @@ if [ "$RADARR_EXISTS" != "true" ]; then
   }'
   )
   JELLYSEERR_SETTINGS_RADARR_RESPONSE=$(
-    curl -sS "$JELLYSEERR_URL/api/v1/settings/radarr" \
+    curl -fsS "$JELLYSEERR_URL/api/v1/settings/radarr" \
       -X POST \
       -b "$COOKIE_JAR" \
       -H 'Content-Type: application/json' \
@@ -345,7 +343,7 @@ if [ "$SONARR_EXISTS" != "true" ]; then
   }'
   )
   JELLYSEERR_SETTINGS_SONARR_RESPONSE=$(
-    curl -sS "$JELLYSEERR_URL/api/v1/settings/sonarr" \
+    curl -fsS "$JELLYSEERR_URL/api/v1/settings/sonarr" \
       -X POST \
       -b "$COOKIE_JAR" \
       -H 'Content-Type: application/json' \
@@ -357,7 +355,7 @@ fi
 
 # initialize
 JELLYSEERR_SETTINGS_INITIALIZE_RESPONSE=$(
-  curl -sS "$JELLYSEERR_URL/api/v1/settings/initialize" \
+  curl -fsS "$JELLYSEERR_URL/api/v1/settings/initialize" \
     -X POST \
     -b "$COOKIE_JAR" \
     -H 'Content-Length: 0'
@@ -365,7 +363,7 @@ JELLYSEERR_SETTINGS_INITIALIZE_RESPONSE=$(
 
 # sets the locale apparently
 JELLYSEERR_SETTINGS_LOCALE_PAYLOAD='{"locale":"en"}'
-curl -sS "$JELLYSEERR_URL/api/v1/settings/main" \
+curl -fsS "$JELLYSEERR_URL/api/v1/settings/main" \
   -X POST \
   -b "$COOKIE_JAR" \
   -H 'Content-Type: application/json' \
@@ -384,7 +382,7 @@ SETUP_RADARR_AUTHENTICATION_PAYLOAD=$(jq -n \
   "bindAddress": "*","port": 7878,"sslPort": 9898,"enableSsl": false,"launchBrowser": true,"authenticationMethod": "forms","authenticationRequired": "enabled","analyticsEnabled": false,"username": $RADARR_USERNAME,"password": $RADARR_PASSWORD,"passwordConfirmation": $RADARR_PASSWORD,"logLevel": "debug","logSizeLimit": 1,"consoleLogLevel": "","branch": "master","apiKey": $RADARR_API_KEY,"sslCertPath": "","sslCertPassword": "","urlBase": "","instanceName": "Radarr","applicationUrl": "","updateAutomatically": false,"updateMechanism": "docker","updateScriptPath": "","proxyEnabled": false,"proxyType": "http","proxyHostname": "","proxyPort": 8080,"proxyUsername": "","proxyPassword": "","proxyBypassFilter": "","proxyBypassLocalAddresses": true,"certificateValidation": "enabled","backupFolder": "Backups","backupInterval": 7,"backupRetention": 28,"trustCgnatIpAddresses": false,"id": 1
 }')
 SETUP_RADARR_AUTHENTICATION_RESPONSE=$(
-  curl -sS \
+  curl -fsS \
     -o /dev/null \
     -X PUT \
     -H "Content-Type: application/json" \
@@ -403,7 +401,7 @@ SETUP_SONARR_AUTHENTICATION_PAYLOAD=$(jq -n \
 }'
 )
 SETUP_SONARR_AUTHENTICATION_RESPONSE=$(
-  curl -sS "$SONARR_URL/api/v3/config/host" \
+  curl -fsS "$SONARR_URL/api/v3/config/host" \
     -o /dev/null \
     -X PUT \
     -H "Content-Type: application/json" \
@@ -421,7 +419,7 @@ SETUP_PROWLARR_AUTHENTICATION_PAYLOAD=$(jq -n \
 }'
 )
 SETUP_PROWLARR_AUTHENTICATION_RESPONSE=$(
-  curl -sS "$PROWLARR_URL/api/v1/config/host" \
+  curl -fsS "$PROWLARR_URL/api/v1/config/host" \
     -o /dev/null \
     -X PUT \
     -H "Content-Type: application/json" \
@@ -437,7 +435,7 @@ RADARR_ROOT_FOLDER_PAYLOAD=$(jq -n \
 }'
 )
 RADARR_ROOT_FOLDER_RESPONSE=$(
-  curl -sS "$RADARR_URL/api/v3/rootfolder" \
+  curl -fsS "$RADARR_URL/api/v3/rootfolder" \
     -o /dev/null \
     -H "X-Api-Key: $RADARR_API_KEY" \
     -H "Content-Type: application/json" \
@@ -451,7 +449,7 @@ SONARR_ROOT_FOLDER_PAYLOAD=$(jq -n \
 }'
 )
 SONARR_ROOT_FOLDER_RESPONSE=$(
-  curl -sS "$SONARR_URL/api/v3/rootfolder" \
+  curl -fsS "$SONARR_URL/api/v3/rootfolder" \
     -o /dev/null \
     -H "X-Api-Key: $SONARR_API_KEY" \
     -H "Content-Type: application/json" \
@@ -495,7 +493,7 @@ RADARR_DOWNLOAD_CLIENT_PAYLOAD=$(jq -n \
 )
 
 RADARR_DOWNLOAD_CLIENT_RESPONSE=$(
-  curl -sS \
+  curl -fsS \
     -X POST \
     -H "Content-Type: application/json" \
     -H "X-Api-Key: $RADARR_API_KEY" \
@@ -538,7 +536,7 @@ SONARR_DOWNLOAD_CLIENT_PAYLOAD=$(jq -n \
 }'
 )
 SONARR_DOWNLOAD_CLIENT_RESPONSE=$(
-  curl -sS \
+  curl -fsS \
     -o /dev/null \
     -X POST \
     -H "Content-Type: application/json" \
@@ -572,7 +570,7 @@ PROWLARR_SONARR_PAYLOAD=$(jq -n \
 }')
 
 PROWLARR_SONARR_ADD_APPLICATION_RESPONSE=$(
-  curl -sS \
+  curl -fsS \
     -o /dev/null \
     -X POST \
     -H "Content-Type: application/json" \
@@ -602,7 +600,7 @@ PROWLARR_RADARR_PAYLOAD=$(jq -n \
 }')
 
 PROWLARR_RADARR_ADD_APPLICATION_RESPONSE=$(
-  curl -sS \
+  curl -fsS \
     -o /dev/null \
     -X POST \
     -H "Content-Type: application/json" \
@@ -624,7 +622,7 @@ RADARR_ADD_JELLYFIN_CONNECTION_PAYLOAD=$(jq -n \
 }'
 )
 RADARR_ADD_JELLYFIN_CONNECTION_RESPONSE=""
-curl -sS "$RADARR_URL/api/v3/notification" \
+curl -fsS "$RADARR_URL/api/v3/notification" \
   -o /dev/null \
   -X POST \
   -H "Content-Type: application/json" \
@@ -639,7 +637,7 @@ SONARR_ADD_JELLYFIN_CONNECTION_PAYLOAD=$(jq -n \
 }'
 )
 SONARR_ADD_JELLYFIN_CONNECTION_RESPONSE=$(
-  curl -sS "$SONARR_URL/api/v3/notification" \
+  curl -fsS "$SONARR_URL/api/v3/notification" \
   -o /dev/null \
   -X POST \
   -H "Content-Type: application/json" \
@@ -674,7 +672,7 @@ SONARR_ADD_JELLYFIN_CONNECTION_RESPONSE=$(
 # }'
 # )
 # RADARR_JELLYSEERR_RADARR_SCAN_WEBHOOK_RESPONSE=$(
-#   curl "$RADARR_URL/api/v3/notification" \
+#   curl -fsS "$RADARR_URL/api/v3/notification" \
 #     -X POST \
 #     -H "Content-Type: application/json" \
 #     -H "X-Api-Key: $RADARR_API_KEY" \
@@ -698,7 +696,7 @@ SONARR_ADD_JELLYFIN_CONNECTION_RESPONSE=$(
 # }'
 # )
 # SONARR_JELLYSEERR_SONARR_SCAN_WEBHOOK_RESPONSE=$(
-#   curl "$SONARR_URL/api/v3/notification" \
+#   curl -fsS "$SONARR_URL/api/v3/notification" \
 #     -X POST \
 #     -H "Content-Type: application/json" \
 #     -H "X-Api-Key: $SONARR_API_KEY" \
@@ -714,7 +712,7 @@ SONARR_ADD_JELLYFIN_CONNECTION_RESPONSE=$(
 # }'
 # )
 # SONARR_JELLYSEERR_JELLYFIN_RECENTLY_ADDED_SCAN_WEBHOOK_RESPONSE=$(
-#   curl "$SONARR_URL/api/v3/notification" \
+#   curl -fsS "$SONARR_URL/api/v3/notification" \
 #     -X POST \
 #     -H "Content-Type: application/json" \
 #     -H "X-Api-Key: $SONARR_API_KEY" \
@@ -730,7 +728,7 @@ SONARR_ADD_JELLYFIN_CONNECTION_RESPONSE=$(
 # }'
 # )
 # SONARR_JELLYSEERR_DOWNLOAD_SYNC_WEBHOOK_RESPONSE=$(
-#   curl "$SONARR_URL/api/v3/notification" \
+#   curl -fsS "$SONARR_URL/api/v3/notification" \
 #     -X POST \
 #     -H "Content-Type: application/json" \
 #     -H "X-Api-Key: $SONARR_API_KEY" \
@@ -739,7 +737,9 @@ SONARR_ADD_JELLYFIN_CONNECTION_RESPONSE=$(
 
 
 
+echo "Starting to add indexers to Prowlarr, disabling xtrace due to noisiness"
 
+set +x
 
 # adding BitSearch to prowlarr
 curl -sS "$PROWLARR_URL/api/v1/indexer?" \
@@ -797,8 +797,9 @@ curl -sS "$PROWLARR_URL/api/v1/indexer" \
   -H "X-Api-Key: $PROWLARR_API_KEY" \
   --data-raw '{"indexerUrls":["https://torrentgalaxy.one/","https://torrentgalaxy.info/","https://torrentgalaxy.space/"],"legacyUrls":[],"definitionName":"torrentgalaxyclone","description":"TorrentGalaxyClone is a Public site for MOVIES / TV / GENERAL","language":"en-US","enable":true,"redirect":false,"supportsRss":true,"supportsSearch":true,"supportsRedirect":false,"supportsPagination":false,"appProfileId":1,"protocol":"torrent","privacy":"public","capabilities":{"limitsMax":100,"limitsDefault":100,"categories":[{"id":5000,"name":"TV","subCategories":[{"id":5070,"name":"TV/Anime","subCategories":[]},{"id":5080,"name":"TV/Documentary","subCategories":[]}]},{"id":4000,"name":"PC","subCategories":[]},{"id":7000,"name":"Books","subCategories":[]},{"id":1000,"name":"Console","subCategories":[]},{"id":2000,"name":"Movies","subCategories":[]},{"id":3000,"name":"Audio","subCategories":[]},{"id":8000,"name":"Other","subCategories":[]},{"id":6000,"name":"XXX","subCategories":[]}],"supportsRawSearch":false,"searchParams":["q","q"],"tvSearchParams":["q","season","ep","imdbId"],"movieSearchParams":["q","imdbId"],"musicSearchParams":["q"],"bookSearchParams":["q"]},"priority":25,"downloadClientId":0,"added":"0001-01-01T04:57:00Z","sortName":"torrentgalaxyclone","name":"TorrentGalaxyClone","fields":[{"name":"definitionFile","value":"torrentgalaxyclone"},{"name":"baseUrl"},{"name":"baseSettings.queryLimit"},{"name":"baseSettings.grabLimit"},{"name":"baseSettings.limitsUnit","value":0},{"name":"torrentBaseSettings.appMinimumSeeders"},{"name":"torrentBaseSettings.seedRatio"},{"name":"torrentBaseSettings.seedTime"},{"name":"torrentBaseSettings.packSeedTime"},{"name":"torrentBaseSettings.preferMagnetUrl","value":false},{"name":"uploader"},{"name":"info_uploader","value":"You can filter by Uploader by entering a Case Sensitive username, or leave empty to get all results.<br>Note: this is the username of the Uploader and not the Groupname that often show up at the end of TGx titles, eg RMTeam."}],"implementationName":"Cardigann","implementation":"Cardigann","configContract":"CardigannSettings","infoLink":"https://wiki.servarr.com/prowlarr/supported-indexers#torrentgalaxyclone","tags":[]}'
 
+set -x
 
-
+echo "Done adding indexers to Prowlarr, re-enabling xtrace"
 
 echo "Finished init"
 # sleep to allow docker exec'ing into for debugging
