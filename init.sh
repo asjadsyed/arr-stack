@@ -13,8 +13,6 @@ SONARR_URL="http://sonarr:8989"
 PROWLARR_URL="http://prowlarr:9696"
 RADARR_CATEGORY="movies"
 SONARR_CATEGORY="shows"
-RADARR_INNER_ROOT="/data/media/$RADARR_CATEGORY"
-SONARR_INNER_ROOT="/data/media/$SONARR_CATEGORY"
 RADARR_ROOT="/data/media/$RADARR_CATEGORY"
 SONARR_ROOT="/data/media/$SONARR_CATEGORY"
 RADARR_USERNAME="${RADARR_USERNAME}"
@@ -320,9 +318,9 @@ if [ "$RADARR_EXISTS" != "true" ]; then
   # note: I set "syncEnabled":true
   JELLYSEERR_SETTINGS_RADARR_PAYLOAD=$(jq -n \
     --arg RADARR_API_KEY "$RADARR_API_KEY" \
-    --arg RADARR_INNER_ROOT "$RADARR_INNER_ROOT" \
+    --arg RADARR_ROOT "$RADARR_ROOT" \
   '{
-  "name":"Radarr","hostname":"radarr","port":7878,"apiKey":$RADARR_API_KEY,"useSsl":false,"baseUrl":"","externalUrl":"http://localhost:7878","activeProfileId":1,"activeProfileName":"Any","activeDirectory":$RADARR_INNER_ROOT,"is4k":false,"minimumAvailability":"released","tags":[],"isDefault":true,"syncEnabled":true,"preventSearch":false,"tagRequests":false
+  "name":"Radarr","hostname":"radarr","port":7878,"apiKey":$RADARR_API_KEY,"useSsl":false,"baseUrl":"","externalUrl":"http://localhost:7878","activeProfileId":1,"activeProfileName":"Any","activeDirectory":$RADARR_ROOT,"is4k":false,"minimumAvailability":"released","tags":[],"isDefault":true,"syncEnabled":true,"preventSearch":false,"tagRequests":false
   }'
   )
   JELLYSEERR_SETTINGS_RADARR_RESPONSE=$(
@@ -340,9 +338,9 @@ if [ "$SONARR_EXISTS" != "true" ]; then
   echo "Setting up Jellyseerr with Sonarr..."
   JELLYSEERR_SETTINGS_SONARR_PAYLOAD=$(jq -n \
     --arg SONARR_API_KEY "$SONARR_API_KEY" \
-    --arg SONARR_INNER_ROOT "$SONARR_INNER_ROOT" \
+    --arg SONARR_ROOT "$SONARR_ROOT" \
   '{
-  "name":"Sonarr","hostname":"sonarr","port":8989,"apiKey":$SONARR_API_KEY,"useSsl":false,"baseUrl":"","externalUrl":"http://localhost:8989","activeProfileId":1,"activeProfileName":"Any","activeDirectory":$SONARR_INNER_ROOT,"activeAnimeDirectory":"","tags":[],"animeTags":[],"is4k":false,"isDefault":true,"enableSeasonFolders":false,"syncEnabled":true,"preventSearch":false,"tagRequests":false
+  "name":"Sonarr","hostname":"sonarr","port":8989,"apiKey":$SONARR_API_KEY,"useSsl":false,"baseUrl":"","externalUrl":"http://localhost:8989","activeProfileId":1,"activeProfileName":"Any","activeDirectory":$SONARR_ROOT,"activeAnimeDirectory":"","tags":[],"animeTags":[],"is4k":false,"isDefault":true,"enableSeasonFolders":false,"syncEnabled":true,"preventSearch":false,"tagRequests":false
   }'
   )
   JELLYSEERR_SETTINGS_SONARR_RESPONSE=$(
@@ -436,7 +434,7 @@ RADARR_ROOT_FOLDER_RESPONSE=$(
     -o /dev/null \
     -H "X-Api-Key: $RADARR_API_KEY" \
     -H "Content-Type: application/json" \
-    -d "{\"path\":\"$RADARR_INNER_ROOT\"}"
+    -d "{\"path\":\"$RADARR_ROOT\"}"
 )
 
 SONARR_ROOT_FOLDER_RESPONSE=$(
@@ -444,7 +442,7 @@ SONARR_ROOT_FOLDER_RESPONSE=$(
     -o /dev/null \
     -H "X-Api-Key: $SONARR_API_KEY" \
     -H "Content-Type: application/json" \
-    -d "{\"path\":\"$SONARR_INNER_ROOT\"}"
+    -d "{\"path\":\"$SONARR_ROOT\"}"
 )
 
 # sleep 5
