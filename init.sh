@@ -451,33 +451,53 @@ SONARR_IMPORT_EXTRA_FILES_RESPONSE=$(
     --data-raw "$SONARR_IMPORT_EXTRA_FILES_PAYLOAD"
 )
 
-RADARR_ROOT_FOLDER_PAYLOAD=$(jq -n \
-  --arg RADARR_ROOT "$RADARR_ROOT" \
-'{
-  "path":$RADARR_ROOT
-}'
-)
-RADARR_ROOT_FOLDER_RESPONSE=$(
+RADARR_ROOT_FOLDER_REGISTERED=$(
   curl -fsS "$RADARR_URL/api/v3/rootfolder" \
-    -o /dev/null \
     -H "X-Api-Key: $RADARR_API_KEY" \
-    -H "Content-Type: application/json" \
-    -d "$RADARR_ROOT_FOLDER_PAYLOAD"
+  | jq -e --arg RADARR_ROOT "$RADARR_ROOT" '.[] | select(.path == $RADARR_ROOT)' >/dev/null && echo true || echo false
 )
+if $RADARR_ROOT_FOLDER_REGISTERED; then
+  echo "Radarr root folder already registered, skipping..."
+else
+  echo "Registering Radarr root folder..."
+  RADARR_ROOT_FOLDER_PAYLOAD=$(jq -n \
+    --arg RADARR_ROOT "$RADARR_ROOT" \
+  '{
+    "path":$RADARR_ROOT
+  }'
+  )
+  RADARR_ROOT_FOLDER_RESPONSE=$(
+    curl -fsS "$RADARR_URL/api/v3/rootfolder" \
+      -o /dev/null \
+      -H "X-Api-Key: $RADARR_API_KEY" \
+      -H "Content-Type: application/json" \
+      -d "$RADARR_ROOT_FOLDER_PAYLOAD"
+  )
+fi
 
-SONARR_ROOT_FOLDER_PAYLOAD=$(jq -n \
-  --arg SONARR_ROOT "$SONARR_ROOT" \
-'{
-  "path":$SONARR_ROOT
-}'
-)
-SONARR_ROOT_FOLDER_RESPONSE=$(
+SONARR_ROOT_FOLDER_REGISTERED=$(
   curl -fsS "$SONARR_URL/api/v3/rootfolder" \
-    -o /dev/null \
     -H "X-Api-Key: $SONARR_API_KEY" \
-    -H "Content-Type: application/json" \
-    -d "$SONARR_ROOT_FOLDER_PAYLOAD"
+  | jq -e --arg SONARR_ROOT "$SONARR_ROOT" '.[] | select(.path == $SONARR_ROOT)' >/dev/null && echo true || echo false
 )
+if $SONARR_ROOT_FOLDER_REGISTERED; then
+  echo "Sonarr root folder already registered, skipping..."
+else
+  echo "Registering Sonarr root folder..."
+  SONARR_ROOT_FOLDER_PAYLOAD=$(jq -n \
+    --arg SONARR_ROOT "$SONARR_ROOT" \
+  '{
+    "path":$SONARR_ROOT
+  }'
+  )
+  SONARR_ROOT_FOLDER_RESPONSE=$(
+    curl -fsS "$SONARR_URL/api/v3/rootfolder" \
+      -o /dev/null \
+      -H "X-Api-Key: $SONARR_API_KEY" \
+      -H "Content-Type: application/json" \
+      -d "$SONARR_ROOT_FOLDER_PAYLOAD"
+  )
+fi
 
 # sleep 5
 RADARR_DOWNLOAD_CLIENT_PAYLOAD=$(jq -n \
