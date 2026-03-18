@@ -60,111 +60,116 @@ until curl -fsS -H "X-Api-Key: $RADARR_API_KEY" "$RADARR_URL/api/v3/system/statu
 until curl -fsS -H "X-Api-Key: $SONARR_API_KEY" "$SONARR_URL/api/v3/system/status" >/dev/null; do sleep 1; done
 until curl -fsS -H "X-Api-Key: $PROWLARR_API_KEY" "$PROWLARR_URL/api/v1/system/status" >/dev/null; do sleep 1; done
 
+JELLYFIN_STARTUP_WIZARD_COMPLETED=$(sed -n "s:.*<IsStartupWizardCompleted>\\(.*\\)</IsStartupWizardCompleted>.*:\\1:p" /config/jellyfin-config/system.xml)
+
 JELLYFIN_AUTHORIZATION_HEADER='Authorization: MediaBrowser Client="setup", Device="docker", DeviceId="setup-1", Version="10.10.7"'
 
+if [ "$JELLYFIN_STARTUP_WIZARD_COMPLETED" != "true" ]; then
+  echo "Jellyfin startup wizard not completed yet; running first-run setup"
 
-JELLYFIN_CONFIGURATION_PAYLOAD='{"UICulture":"en-US","MetadataCountryCode":"US","PreferredMetadataLanguage":"en"}'
-JELLYFIN_CONFIGURATION_RESPONSE=$(
-  curl -fsS "$JELLYFIN_URL/Startup/Configuration" \
-    -o /dev/null \
-    -X POST \
-    -H "$JELLYFIN_AUTHORIZATION_HEADER" \
-    -H "Content-Type: application/json" \
-    --data-raw "$JELLYFIN_CONFIGURATION_PAYLOAD"
-)
+  JELLYFIN_CONFIGURATION_PAYLOAD='{"UICulture":"en-US","MetadataCountryCode":"US","PreferredMetadataLanguage":"en"}'
+  JELLYFIN_CONFIGURATION_RESPONSE=$(
+    curl -fsS "$JELLYFIN_URL/Startup/Configuration" \
+      -o /dev/null \
+      -X POST \
+      -H "$JELLYFIN_AUTHORIZATION_HEADER" \
+      -H "Content-Type: application/json" \
+      --data-raw "$JELLYFIN_CONFIGURATION_PAYLOAD"
+  )
 
-# GET with side-effects
-JELLYFIN_SET_UP_DEFAULT_USER_RESPONSE=$(
-  curl -fsS "$JELLYFIN_URL/Startup/User" \
-    -o /dev/null \
-    -H "$JELLYFIN_AUTHORIZATION_HEADER"
-)
+  # GET with side-effects
+  JELLYFIN_SET_UP_DEFAULT_USER_RESPONSE=$(
+    curl -fsS "$JELLYFIN_URL/Startup/User" \
+      -o /dev/null \
+      -H "$JELLYFIN_AUTHORIZATION_HEADER"
+  )
 
-JELLYFIN_SET_UP_ADMIN_USER_PAYLOAD=$(jq -n \
-  --arg JELLYFIN_USERNAME "$JELLYFIN_USERNAME" \
-  --arg JELLYFIN_PASSWORD "$JELLYFIN_PASSWORD" \
-'{
-  "Name": $JELLYFIN_USERNAME,
-  "Password": $JELLYFIN_PASSWORD
-}')
-JELLYFIN_SET_UP_ADMIN_USER_RESPONSE=$(
-  curl -fsS "$JELLYFIN_URL/Startup/User" \
-    -X POST \
-    -o /dev/null \
-    -H "$JELLYFIN_AUTHORIZATION_HEADER" \
-    -H "Content-Type: application/json" \
-    --data-raw "$JELLYFIN_SET_UP_ADMIN_USER_PAYLOAD"
-)
+  JELLYFIN_SET_UP_ADMIN_USER_PAYLOAD=$(jq -n \
+    --arg JELLYFIN_USERNAME "$JELLYFIN_USERNAME" \
+    --arg JELLYFIN_PASSWORD "$JELLYFIN_PASSWORD" \
+  '{
+    "Name": $JELLYFIN_USERNAME,
+    "Password": $JELLYFIN_PASSWORD
+  }')
+  JELLYFIN_SET_UP_ADMIN_USER_RESPONSE=$(
+    curl -fsS "$JELLYFIN_URL/Startup/User" \
+      -X POST \
+      -o /dev/null \
+      -H "$JELLYFIN_AUTHORIZATION_HEADER" \
+      -H "Content-Type: application/json" \
+      --data-raw "$JELLYFIN_SET_UP_ADMIN_USER_PAYLOAD"
+  )
 
-JELLYFIN_MOVIES_VALIDATE_PATH_PAYLOAD='{"Path":"/data/media/movies"}'
-JELLYFIN_MOVIES_VALIDATE_PATH_RESPONSE=$(
-  curl -fsS "$JELLYFIN_URL/Environment/ValidatePath" \
-    -X POST \
-    -o /dev/null \
-    -H "$JELLYFIN_AUTHORIZATION_HEADER" \
-    -H "Content-Type: application/json" \
-    --data-raw "$JELLYFIN_MOVIES_VALIDATE_PATH_PAYLOAD"
-)
+  JELLYFIN_MOVIES_VALIDATE_PATH_PAYLOAD='{"Path":"/data/media/movies"}'
+  JELLYFIN_MOVIES_VALIDATE_PATH_RESPONSE=$(
+    curl -fsS "$JELLYFIN_URL/Environment/ValidatePath" \
+      -X POST \
+      -o /dev/null \
+      -H "$JELLYFIN_AUTHORIZATION_HEADER" \
+      -H "Content-Type: application/json" \
+      --data-raw "$JELLYFIN_MOVIES_VALIDATE_PATH_PAYLOAD"
+  )
 
-JELLYFIN_MOVIES_VIRTUAL_FOLDERS_PAYLOAD='{"LibraryOptions":{"Enabled":true,"EnableArchiveMediaFiles":false,"EnablePhotos":true,"EnableRealtimeMonitor":true,"EnableLUFSScan":true,"ExtractTrickplayImagesDuringLibraryScan":false,"SaveTrickplayWithMedia":false,"EnableTrickplayImageExtraction":false,"ExtractChapterImagesDuringLibraryScan":false,"EnableChapterImageExtraction":false,"EnableInternetProviders":true,"SaveLocalMetadata":false,"EnableAutomaticSeriesGrouping":false,"PreferredMetadataLanguage":"","MetadataCountryCode":"","SeasonZeroDisplayName":"Specials","AutomaticRefreshIntervalDays":0,"EnableEmbeddedTitles":false,"EnableEmbeddedExtrasTitles":false,"EnableEmbeddedEpisodeInfos":false,"AllowEmbeddedSubtitles":"AllowAll","SkipSubtitlesIfEmbeddedSubtitlesPresent":false,"SkipSubtitlesIfAudioTrackMatches":false,"SaveSubtitlesWithMedia":true,"SaveLyricsWithMedia":false,"RequirePerfectSubtitleMatch":true,"AutomaticallyAddToCollection":false,"PreferNonstandardArtistsTag":false,"UseCustomTagDelimiters":false,"MetadataSavers":[],"TypeOptions":[{"Type":"Movie","MetadataFetchers":["TheMovieDb","The Open Movie Database"],"MetadataFetcherOrder":["TheMovieDb","The Open Movie Database"],"ImageFetchers":["TheMovieDb","The Open Movie Database","Embedded Image Extractor","Screen Grabber"],"ImageFetcherOrder":["TheMovieDb","The Open Movie Database","Embedded Image Extractor","Screen Grabber"]}],"LocalMetadataReaderOrder":["Nfo"],"SubtitleDownloadLanguages":[],"CustomTagDelimiters":["/","|",";","\\"],"DelimiterWhitelist":[],"DisabledSubtitleFetchers":[],"SubtitleFetcherOrder":[],"DisabledLyricFetchers":[],"LyricFetcherOrder":[],"PathInfos":[{"Path":"/data/media/movies"}]}}'
-JELLYFIN_MOVIES_VIRTUAL_FOLDERS_RESPONSE=$(
-  curl -fsS "$JELLYFIN_URL/Library/VirtualFolders?collectionType=movies&refreshLibrary=false&name=Movies" \
-    -X POST \
-    -o /dev/null \
-    -H "$JELLYFIN_AUTHORIZATION_HEADER" \
-    -H "Content-Type: application/json" \
-    --data-raw "$JELLYFIN_MOVIES_VIRTUAL_FOLDERS_PAYLOAD"
-)
+  JELLYFIN_MOVIES_VIRTUAL_FOLDERS_PAYLOAD='{"LibraryOptions":{"Enabled":true,"EnableArchiveMediaFiles":false,"EnablePhotos":true,"EnableRealtimeMonitor":true,"EnableLUFSScan":true,"ExtractTrickplayImagesDuringLibraryScan":false,"SaveTrickplayWithMedia":false,"EnableTrickplayImageExtraction":false,"ExtractChapterImagesDuringLibraryScan":false,"EnableChapterImageExtraction":false,"EnableInternetProviders":true,"SaveLocalMetadata":false,"EnableAutomaticSeriesGrouping":false,"PreferredMetadataLanguage":"","MetadataCountryCode":"","SeasonZeroDisplayName":"Specials","AutomaticRefreshIntervalDays":0,"EnableEmbeddedTitles":false,"EnableEmbeddedExtrasTitles":false,"EnableEmbeddedEpisodeInfos":false,"AllowEmbeddedSubtitles":"AllowAll","SkipSubtitlesIfEmbeddedSubtitlesPresent":false,"SkipSubtitlesIfAudioTrackMatches":false,"SaveSubtitlesWithMedia":true,"SaveLyricsWithMedia":false,"RequirePerfectSubtitleMatch":true,"AutomaticallyAddToCollection":false,"PreferNonstandardArtistsTag":false,"UseCustomTagDelimiters":false,"MetadataSavers":[],"TypeOptions":[{"Type":"Movie","MetadataFetchers":["TheMovieDb","The Open Movie Database"],"MetadataFetcherOrder":["TheMovieDb","The Open Movie Database"],"ImageFetchers":["TheMovieDb","The Open Movie Database","Embedded Image Extractor","Screen Grabber"],"ImageFetcherOrder":["TheMovieDb","The Open Movie Database","Embedded Image Extractor","Screen Grabber"]}],"LocalMetadataReaderOrder":["Nfo"],"SubtitleDownloadLanguages":[],"CustomTagDelimiters":["/","|",";","\\"],"DelimiterWhitelist":[],"DisabledSubtitleFetchers":[],"SubtitleFetcherOrder":[],"DisabledLyricFetchers":[],"LyricFetcherOrder":[],"PathInfos":[{"Path":"/data/media/movies"}]}}'
+  JELLYFIN_MOVIES_VIRTUAL_FOLDERS_RESPONSE=$(
+    curl -fsS "$JELLYFIN_URL/Library/VirtualFolders?collectionType=movies&refreshLibrary=false&name=Movies" \
+      -X POST \
+      -o /dev/null \
+      -H "$JELLYFIN_AUTHORIZATION_HEADER" \
+      -H "Content-Type: application/json" \
+      --data-raw "$JELLYFIN_MOVIES_VIRTUAL_FOLDERS_PAYLOAD"
+  )
 
-JELLYFIN_SHOWS_VALIDATE_PATH_PAYLOAD='{"Path":"/data/media/shows"}'
-JELLYFIN_SHOWS_VALIDATE_PATH_RESPONSE=$(
-  curl -fsS "$JELLYFIN_URL/Environment/ValidatePath" \
-    -X POST \
-    -o /dev/null \
-    -H "$JELLYFIN_AUTHORIZATION_HEADER" \
-    -H "Content-Type: application/json" \
-    --data-raw "$JELLYFIN_SHOWS_VALIDATE_PATH_PAYLOAD"
-)
+  JELLYFIN_SHOWS_VALIDATE_PATH_PAYLOAD='{"Path":"/data/media/shows"}'
+  JELLYFIN_SHOWS_VALIDATE_PATH_RESPONSE=$(
+    curl -fsS "$JELLYFIN_URL/Environment/ValidatePath" \
+      -X POST \
+      -o /dev/null \
+      -H "$JELLYFIN_AUTHORIZATION_HEADER" \
+      -H "Content-Type: application/json" \
+      --data-raw "$JELLYFIN_SHOWS_VALIDATE_PATH_PAYLOAD"
+  )
 
-JELLYFIN_SHOWS_VIRTUAL_FOLDERS_PAYLOAD='{"LibraryOptions":{"Enabled":true,"EnableArchiveMediaFiles":false,"EnablePhotos":true,"EnableRealtimeMonitor":true,"EnableLUFSScan":true,"ExtractTrickplayImagesDuringLibraryScan":false,"SaveTrickplayWithMedia":false,"EnableTrickplayImageExtraction":false,"ExtractChapterImagesDuringLibraryScan":false,"EnableChapterImageExtraction":false,"EnableInternetProviders":true,"SaveLocalMetadata":false,"EnableAutomaticSeriesGrouping":false,"PreferredMetadataLanguage":"","MetadataCountryCode":"","SeasonZeroDisplayName":"Specials","AutomaticRefreshIntervalDays":0,"EnableEmbeddedTitles":false,"EnableEmbeddedExtrasTitles":false,"EnableEmbeddedEpisodeInfos":false,"AllowEmbeddedSubtitles":"AllowAll","SkipSubtitlesIfEmbeddedSubtitlesPresent":false,"SkipSubtitlesIfAudioTrackMatches":false,"SaveSubtitlesWithMedia":true,"SaveLyricsWithMedia":false,"RequirePerfectSubtitleMatch":true,"AutomaticallyAddToCollection":false,"PreferNonstandardArtistsTag":false,"UseCustomTagDelimiters":false,"MetadataSavers":[],"TypeOptions":[{"Type":"Series","MetadataFetchers":["TheMovieDb","The Open Movie Database"],"MetadataFetcherOrder":["TheMovieDb","The Open Movie Database"],"ImageFetchers":["TheMovieDb"],"ImageFetcherOrder":["TheMovieDb"]},{"Type":"Season","MetadataFetchers":["TheMovieDb"],"MetadataFetcherOrder":["TheMovieDb"],"ImageFetchers":["TheMovieDb"],"ImageFetcherOrder":["TheMovieDb"]},{"Type":"Episode","MetadataFetchers":["TheMovieDb","The Open Movie Database"],"MetadataFetcherOrder":["TheMovieDb","The Open Movie Database"],"ImageFetchers":["TheMovieDb","The Open Movie Database","Embedded Image Extractor","Screen Grabber"],"ImageFetcherOrder":["TheMovieDb","The Open Movie Database","Embedded Image Extractor","Screen Grabber"]}],"LocalMetadataReaderOrder":["Nfo"],"SubtitleDownloadLanguages":[],"CustomTagDelimiters":["/","|",";","\\"],"DelimiterWhitelist":[],"DisabledSubtitleFetchers":[],"SubtitleFetcherOrder":[],"DisabledLyricFetchers":[],"LyricFetcherOrder":[],"PathInfos":[{"Path":"/data/media/shows"}]}}'
-JELLYFIN_SHOWS_VIRTUAL_FOLDERS_RESPONSE=$(
-  curl -fsS "$JELLYFIN_URL/Library/VirtualFolders?collectionType=tvshows&refreshLibrary=false&name=Shows" \
-    -X POST \
-    -o /dev/null \
-    -H "$JELLYFIN_AUTHORIZATION_HEADER" \
-    -H "Content-Type: application/json" \
-    --data-raw "$JELLYFIN_SHOWS_VIRTUAL_FOLDERS_PAYLOAD"
-)
+  JELLYFIN_SHOWS_VIRTUAL_FOLDERS_PAYLOAD='{"LibraryOptions":{"Enabled":true,"EnableArchiveMediaFiles":false,"EnablePhotos":true,"EnableRealtimeMonitor":true,"EnableLUFSScan":true,"ExtractTrickplayImagesDuringLibraryScan":false,"SaveTrickplayWithMedia":false,"EnableTrickplayImageExtraction":false,"ExtractChapterImagesDuringLibraryScan":false,"EnableChapterImageExtraction":false,"EnableInternetProviders":true,"SaveLocalMetadata":false,"EnableAutomaticSeriesGrouping":false,"PreferredMetadataLanguage":"","MetadataCountryCode":"","SeasonZeroDisplayName":"Specials","AutomaticRefreshIntervalDays":0,"EnableEmbeddedTitles":false,"EnableEmbeddedExtrasTitles":false,"EnableEmbeddedEpisodeInfos":false,"AllowEmbeddedSubtitles":"AllowAll","SkipSubtitlesIfEmbeddedSubtitlesPresent":false,"SkipSubtitlesIfAudioTrackMatches":false,"SaveSubtitlesWithMedia":true,"SaveLyricsWithMedia":false,"RequirePerfectSubtitleMatch":true,"AutomaticallyAddToCollection":false,"PreferNonstandardArtistsTag":false,"UseCustomTagDelimiters":false,"MetadataSavers":[],"TypeOptions":[{"Type":"Series","MetadataFetchers":["TheMovieDb","The Open Movie Database"],"MetadataFetcherOrder":["TheMovieDb","The Open Movie Database"],"ImageFetchers":["TheMovieDb"],"ImageFetcherOrder":["TheMovieDb"]},{"Type":"Season","MetadataFetchers":["TheMovieDb"],"MetadataFetcherOrder":["TheMovieDb"],"ImageFetchers":["TheMovieDb"],"ImageFetcherOrder":["TheMovieDb"]},{"Type":"Episode","MetadataFetchers":["TheMovieDb","The Open Movie Database"],"MetadataFetcherOrder":["TheMovieDb","The Open Movie Database"],"ImageFetchers":["TheMovieDb","The Open Movie Database","Embedded Image Extractor","Screen Grabber"],"ImageFetcherOrder":["TheMovieDb","The Open Movie Database","Embedded Image Extractor","Screen Grabber"]}],"LocalMetadataReaderOrder":["Nfo"],"SubtitleDownloadLanguages":[],"CustomTagDelimiters":["/","|",";","\\"],"DelimiterWhitelist":[],"DisabledSubtitleFetchers":[],"SubtitleFetcherOrder":[],"DisabledLyricFetchers":[],"LyricFetcherOrder":[],"PathInfos":[{"Path":"/data/media/shows"}]}}'
+  JELLYFIN_SHOWS_VIRTUAL_FOLDERS_RESPONSE=$(
+    curl -fsS "$JELLYFIN_URL/Library/VirtualFolders?collectionType=tvshows&refreshLibrary=false&name=Shows" \
+      -X POST \
+      -o /dev/null \
+      -H "$JELLYFIN_AUTHORIZATION_HEADER" \
+      -H "Content-Type: application/json" \
+      --data-raw "$JELLYFIN_SHOWS_VIRTUAL_FOLDERS_PAYLOAD"
+  )
 
-JELLYFIN_CONFIGURATION_PAYLOAD='{"UICulture":"en-US","MetadataCountryCode":"US","PreferredMetadataLanguage":"en"}'
-JELLYFIN_CONFIGURATION_RESPONSE=$(
-  curl -fsS "$JELLYFIN_URL/Startup/Configuration" \
-    -o /dev/null \
-    -X POST \
-    -H "$JELLYFIN_AUTHORIZATION_HEADER" \
-    -H "Content-Type: application/json" \
-    --data-raw "$JELLYFIN_CONFIGURATION_PAYLOAD"
-)
+  JELLYFIN_CONFIGURATION_PAYLOAD='{"UICulture":"en-US","MetadataCountryCode":"US","PreferredMetadataLanguage":"en"}'
+  JELLYFIN_CONFIGURATION_RESPONSE=$(
+    curl -fsS "$JELLYFIN_URL/Startup/Configuration" \
+      -o /dev/null \
+      -X POST \
+      -H "$JELLYFIN_AUTHORIZATION_HEADER" \
+      -H "Content-Type: application/json" \
+      --data-raw "$JELLYFIN_CONFIGURATION_PAYLOAD"
+  )
 
-JELLYFIN_REMOTE_ACCESS_PAYLOAD='{"EnableRemoteAccess":true,"EnableAutomaticPortMapping":false}'
-JELLYFIN_REMOTE_ACCESS_RESPONSE=$(
-  curl -fsS "$JELLYFIN_URL/Startup/RemoteAccess" \
-    -o /dev/null \
-    -X POST \
-    -H "$JELLYFIN_AUTHORIZATION_HEADER" \
-    -H "Content-Type: application/json" \
-    --data-raw "$JELLYFIN_REMOTE_ACCESS_PAYLOAD"
-)
+  JELLYFIN_REMOTE_ACCESS_PAYLOAD='{"EnableRemoteAccess":true,"EnableAutomaticPortMapping":false}'
+  JELLYFIN_REMOTE_ACCESS_RESPONSE=$(
+    curl -fsS "$JELLYFIN_URL/Startup/RemoteAccess" \
+      -o /dev/null \
+      -X POST \
+      -H "$JELLYFIN_AUTHORIZATION_HEADER" \
+      -H "Content-Type: application/json" \
+      --data-raw "$JELLYFIN_REMOTE_ACCESS_PAYLOAD"
+  )
 
-JELLYFIN_COMPLETE_RESPONSE=$(
-  curl -fsS "$JELLYFIN_URL/Startup/Complete" \
-    -o /dev/null \
-    -X POST \
-    -H "$JELLYFIN_AUTHORIZATION_HEADER" \
-    -H "Content-Length: 0"
-)
-
-
+  JELLYFIN_COMPLETE_RESPONSE=$(
+    curl -fsS "$JELLYFIN_URL/Startup/Complete" \
+      -o /dev/null \
+      -X POST \
+      -H "$JELLYFIN_AUTHORIZATION_HEADER" \
+      -H "Content-Length: 0"
+  )
+else
+  echo "Jellyfin startup wizard already completed, skipping..."
+fi
 
 # get token and create API keys in Jellyfin for Radarr and Sonarr if they don't already exist
 
