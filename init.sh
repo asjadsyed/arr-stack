@@ -557,11 +557,10 @@ else
   }'
   )
   RADARR_DOWNLOAD_CLIENT_RESPONSE=$(
-    curl -fsS \
+    curl -fsS "$RADARR_URL/api/v3/downloadclient" \
       -X POST \
       -H "Content-Type: application/json" \
       -H "X-Api-Key: $RADARR_API_KEY" \
-      "$RADARR_URL/api/v3/downloadclient" \
       --data-raw "$RADARR_DOWNLOAD_CLIENT_PAYLOAD"
   )
 fi
@@ -618,12 +617,10 @@ else
   }'
   )
   SONARR_DOWNLOAD_CLIENT_RESPONSE=$(
-    curl -fsS \
-      -o /dev/null \
+    curl -fsS "$SONARR_URL/api/v3/downloadclient" \
       -X POST \
       -H "Content-Type: application/json" \
       -H "X-Api-Key: $SONARR_API_KEY" \
-      "$SONARR_URL/api/v3/downloadclient" \
       --data-raw "$SONARR_DOWNLOAD_CLIENT_PAYLOAD"
   )
 fi
