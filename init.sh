@@ -720,40 +720,73 @@ else
   )
 fi
 
-# echo "${JELLYFIN_API_KEYS["Radarr"]}"
-# echo "${JELLYFIN_API_KEYS["Sonarr"]}"
-# Jellyfin Radarr/Sonarr API Key is in payload, Use Radarr/Sonarr API Key to send payload to the web app
 # Add Jellyfin connection to Radarr
-RADARR_ADD_JELLYFIN_CONNECTION_PAYLOAD=$(jq -n \
-  --arg JELLYFIN_API_KEY "${JELLYFIN_API_KEYS["Radarr"]}" \
-'{
-"onGrab":true,"onDownload":true,"onUpgrade":true,"onRename":true,"onMovieAdded":false,"onMovieDelete":true,"onMovieFileDelete":true,"onMovieFileDeleteForUpgrade":true,"onHealthIssue":false,"includeHealthWarnings":false,"onHealthRestored":false,"onApplicationUpdate":true,"onManualInteractionRequired":false,"supportsOnGrab":true,"supportsOnDownload":true,"supportsOnUpgrade":true,"supportsOnRename":true,"supportsOnMovieAdded":false,"supportsOnMovieDelete":true,"supportsOnMovieFileDelete":true,"supportsOnMovieFileDeleteForUpgrade":true,"supportsOnHealthIssue":true,"supportsOnHealthRestored":true,"supportsOnApplicationUpdate":true,"supportsOnManualInteractionRequired":false,"name":"Emby / Jellyfin","fields":[{"name":"host","value":"jellyfin"},{"name":"port","value":8096},{"name":"useSsl","value":false},{"name":"urlBase"},{"name":"apiKey","value":$JELLYFIN_API_KEY},{"name":"notify","value":false},{"name":"updateLibrary","value":true},{"name":"mapFrom"},{"name":"mapTo"}],"implementationName":"Emby / Jellyfin","implementation":"MediaBrowser","configContract":"MediaBrowserSettings","infoLink":"https://wiki.servarr.com/radarr/supported#mediabrowser","tags":[]
-}'
+RADARR_JELLYFIN_CONNECTION_REGISTERED=$(
+  curl -fsS "$RADARR_URL/api/v3/notification" \
+    -H "X-Api-Key: $RADARR_API_KEY" \
+  | jq -e '
+      .[]
+      | select(
+          .name == "Emby / Jellyfin"
+          and .implementation == "MediaBrowser"
+          and any(.fields[]; .name == "host" and .value == "jellyfin")
+          and any(.fields[]; .name == "port" and .value == 8096)
+        )
+    ' >/dev/null && echo true || echo false
 )
-RADARR_ADD_JELLYFIN_CONNECTION_RESPONSE=""
-curl -fsS "$RADARR_URL/api/v3/notification" \
-  -o /dev/null \
-  -X POST \
-  -H "Content-Type: application/json" \
-  -H "X-Api-Key: $RADARR_API_KEY" \
-  --data-raw "$RADARR_ADD_JELLYFIN_CONNECTION_PAYLOAD"
+if $RADARR_JELLYFIN_CONNECTION_REGISTERED; then
+  echo "Radarr Jellyfin connection already registered, skipping..."
+else
+  echo "Registering Radarr Jellyfin connection..."
+  RADARR_ADD_JELLYFIN_CONNECTION_PAYLOAD=$(jq -n \
+    --arg JELLYFIN_API_KEY "${JELLYFIN_API_KEYS["Radarr"]}" \
+  '{
+  "onGrab":true,"onDownload":true,"onUpgrade":true,"onRename":true,"onMovieAdded":false,"onMovieDelete":true,"onMovieFileDelete":true,"onMovieFileDeleteForUpgrade":true,"onHealthIssue":false,"includeHealthWarnings":false,"onHealthRestored":false,"onApplicationUpdate":true,"onManualInteractionRequired":false,"supportsOnGrab":true,"supportsOnDownload":true,"supportsOnUpgrade":true,"supportsOnRename":true,"supportsOnMovieAdded":false,"supportsOnMovieDelete":true,"supportsOnMovieFileDelete":true,"supportsOnMovieFileDeleteForUpgrade":true,"supportsOnHealthIssue":true,"supportsOnHealthRestored":true,"supportsOnApplicationUpdate":true,"supportsOnManualInteractionRequired":false,"name":"Emby / Jellyfin","fields":[{"name":"host","value":"jellyfin"},{"name":"port","value":8096},{"name":"useSsl","value":false},{"name":"urlBase"},{"name":"apiKey","value":$JELLYFIN_API_KEY},{"name":"notify","value":false},{"name":"updateLibrary","value":true},{"name":"mapFrom"},{"name":"mapTo"}],"implementationName":"Emby / Jellyfin","implementation":"MediaBrowser","configContract":"MediaBrowserSettings","infoLink":"https://wiki.servarr.com/radarr/supported#mediabrowser","tags":[]
+  }'
+  )
+  RADARR_ADD_JELLYFIN_CONNECTION_RESPONSE=$(
+    curl -fsS "$RADARR_URL/api/v3/notification" \
+      -o /dev/null \
+      -X POST \
+      -H "Content-Type: application/json" \
+      -H "X-Api-Key: $RADARR_API_KEY" \
+      --data-raw "$RADARR_ADD_JELLYFIN_CONNECTION_PAYLOAD"
+  )
+fi
 
-# Add Jellyfin connection to Sonarr 
-SONARR_ADD_JELLYFIN_CONNECTION_PAYLOAD=$(jq -n \
-  --arg JELLYFIN_API_KEY "${JELLYFIN_API_KEYS["Sonarr"]}" \
-'{
-"onGrab":true,"onDownload":true,"onUpgrade":true,"onImportComplete":true,"onRename":true,"onSeriesAdd":true,"onSeriesDelete":true,"onEpisodeFileDelete":true,"onEpisodeFileDeleteForUpgrade":true,"onHealthIssue":false,"includeHealthWarnings":false,"onHealthRestored":false,"onApplicationUpdate":true,"onManualInteractionRequired":false,"supportsOnGrab":true,"supportsOnDownload":true,"supportsOnUpgrade":true,"supportsOnImportComplete":true,"supportsOnRename":true,"supportsOnSeriesAdd":true,"supportsOnSeriesDelete":true,"supportsOnEpisodeFileDelete":true,"supportsOnEpisodeFileDeleteForUpgrade":true,"supportsOnHealthIssue":true,"supportsOnHealthRestored":true,"supportsOnApplicationUpdate":true,"supportsOnManualInteractionRequired":false,"name":"Emby / Jellyfin","fields":[{"name":"host","value":"jellyfin"},{"name":"port","value":8096},{"name":"useSsl","value":false},{"name":"urlBase"},{"name":"apiKey","value":$JELLYFIN_API_KEY},{"name":"notify","value":false},{"name":"updateLibrary","value":true},{"name":"mapFrom"},{"name":"mapTo"}],"implementationName":"Emby / Jellyfin","implementation":"MediaBrowser","configContract":"MediaBrowserSettings","infoLink":"https://wiki.servarr.com/sonarr/supported#mediabrowser","tags":[]
-}'
-)
-SONARR_ADD_JELLYFIN_CONNECTION_RESPONSE=$(
+# Add Jellyfin connection to Sonarr
+SONARR_JELLYFIN_CONNECTION_REGISTERED=$(
   curl -fsS "$SONARR_URL/api/v3/notification" \
-  -o /dev/null \
-  -X POST \
-  -H "Content-Type: application/json" \
-  -H "X-Api-Key: $SONARR_API_KEY" \
-  --data-raw "$SONARR_ADD_JELLYFIN_CONNECTION_PAYLOAD"
+    -H "X-Api-Key: $SONARR_API_KEY" \
+  | jq -e '
+      .[]
+      | select(
+          .name == "Emby / Jellyfin"
+          and .implementation == "MediaBrowser"
+          and any(.fields[]; .name == "host" and .value == "jellyfin")
+          and any(.fields[]; .name == "port" and .value == 8096)
+        )
+    ' >/dev/null && echo true || echo false
 )
-
+if $SONARR_JELLYFIN_CONNECTION_REGISTERED; then
+  echo "Sonarr Jellyfin connection already registered, skipping..."
+else
+  echo "Registering Sonarr Jellyfin connection..."
+  SONARR_ADD_JELLYFIN_CONNECTION_PAYLOAD=$(jq -n \
+    --arg JELLYFIN_API_KEY "${JELLYFIN_API_KEYS["Sonarr"]}" \
+  '{
+  "onGrab":true,"onDownload":true,"onUpgrade":true,"onImportComplete":true,"onRename":true,"onSeriesAdd":true,"onSeriesDelete":true,"onEpisodeFileDelete":true,"onEpisodeFileDeleteForUpgrade":true,"onHealthIssue":false,"includeHealthWarnings":false,"onHealthRestored":false,"onApplicationUpdate":true,"onManualInteractionRequired":false,"supportsOnGrab":true,"supportsOnDownload":true,"supportsOnUpgrade":true,"supportsOnImportComplete":true,"supportsOnRename":true,"supportsOnSeriesAdd":true,"supportsOnSeriesDelete":true,"supportsOnEpisodeFileDelete":true,"supportsOnEpisodeFileDeleteForUpgrade":true,"supportsOnHealthIssue":true,"supportsOnHealthRestored":true,"supportsOnApplicationUpdate":true,"supportsOnManualInteractionRequired":false,"name":"Emby / Jellyfin","fields":[{"name":"host","value":"jellyfin"},{"name":"port","value":8096},{"name":"useSsl","value":false},{"name":"urlBase"},{"name":"apiKey","value":$JELLYFIN_API_KEY},{"name":"notify","value":false},{"name":"updateLibrary","value":true},{"name":"mapFrom"},{"name":"mapTo"}],"implementationName":"Emby / Jellyfin","implementation":"MediaBrowser","configContract":"MediaBrowserSettings","infoLink":"https://wiki.servarr.com/sonarr/supported#mediabrowser","tags":[]
+  }'
+  )
+  SONARR_ADD_JELLYFIN_CONNECTION_RESPONSE=$(
+    curl -fsS "$SONARR_URL/api/v3/notification" \
+      -o /dev/null \
+      -X POST \
+      -H "Content-Type: application/json" \
+      -H "X-Api-Key: $SONARR_API_KEY" \
+      --data-raw "$SONARR_ADD_JELLYFIN_CONNECTION_PAYLOAD"
+  )
+fi
 
 
 # Add Connection - Webhook
