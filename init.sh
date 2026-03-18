@@ -253,13 +253,13 @@ JELLYSEERR_AUTH_JELLYFIN_BOOTSTRAP_PAYLOAD=$(jq -n \
 )
 
 try_auth () {
-  local payload="$1"
+  local auth_payload="$1"
   curl -fsS "$JELLYSEERR_URL/api/v1/auth/jellyfin" \
     -X POST \
     -c "$COOKIE_JAR" \
     -b "$COOKIE_JAR" \
     -H "Content-Type: application/json" \
-    --data-raw "$payload" \
+    --data-raw "$auth_payload" \
     >/dev/null
 }
 
@@ -626,7 +626,7 @@ fi
 
 # Setup Radarr/Sonarr with Prowlarr
 
-PROWLARR_SONARR_PAYLOAD=$(jq -n \
+PROWLARR_SONARR_ADD_APPLICATION_PAYLOAD=$(jq -n \
   --arg SONARR_API_KEY "$SONARR_API_KEY" \
 '{
     "syncLevel": "fullSync",
@@ -655,10 +655,10 @@ PROWLARR_SONARR_ADD_APPLICATION_RESPONSE=$(
     -H "Content-Type: application/json" \
     -H "X-Api-Key: $PROWLARR_API_KEY" \
     "$PROWLARR_URL/api/v1/applications" \
-    --data-raw "$PROWLARR_SONARR_PAYLOAD"
+    --data-raw "$PROWLARR_SONARR_ADD_APPLICATION_PAYLOAD"
 )
 
-PROWLARR_RADARR_PAYLOAD=$(jq -n \
+PROWLARR_RADARR_ADD_APPLICATION_PAYLOAD=$(jq -n \
   --arg RADARR_API_KEY "$RADARR_API_KEY" \
 '{
     "syncLevel": "fullSync",
@@ -685,7 +685,7 @@ PROWLARR_RADARR_ADD_APPLICATION_RESPONSE=$(
     -H "Content-Type: application/json" \
     -H "X-Api-Key: $PROWLARR_API_KEY" \
     "$PROWLARR_URL/api/v1/applications" \
-    --data-raw "$PROWLARR_RADARR_PAYLOAD"
+    --data-raw "$PROWLARR_RADARR_ADD_APPLICATION_PAYLOAD"
 )
 
 
