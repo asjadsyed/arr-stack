@@ -237,6 +237,7 @@ echo "${JELLYFIN_API_KEYS["Sonarr"]}"
 
 # COOKIE_JAR="/opt/init/jellyseerr.cookies"
 COOKIE_JAR="/tmp/jellyseerr.cookies"
+trap 'rm -f "$COOKIE_JAR"' EXIT
 
 JELLYSEERR_AUTH_JELLYFIN_LOGIN_PAYLOAD=$(jq -n \
   --arg JELLYFIN_USERNAME "$JELLYFIN_USERNAME" \
