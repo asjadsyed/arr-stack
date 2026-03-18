@@ -626,65 +626,99 @@ fi
 
 # Setup Radarr/Sonarr with Prowlarr
 
-PROWLARR_RADARR_ADD_APPLICATION_PAYLOAD=$(jq -n \
-  --arg RADARR_API_KEY "$RADARR_API_KEY" \
-'{
-    "syncLevel": "fullSync",
-    "enable": true,
-    "fields": [
-        {"name": "prowlarrUrl", "value": "http://prowlarr:9696"},
-        {"name": "baseUrl", "value": "http://radarr:7878"},
-        {"name": "apiKey", "value": $RADARR_API_KEY},
-        {"name": "syncCategories", "value": [2000,2010,2020,2030,2040,2045,2050,2060,2070,2080,2090]},
-        {"name": "syncRejectBlocklistedTorrentHashesWhileGrabbing", "value": false}
-    ],
-    "implementationName": "Radarr",
-    "implementation": "Radarr",
-    "configContract": "RadarrSettings",
-    "infoLink": "https://wiki.servarr.com/prowlarr/supported#radarr",
-    "tags": [],
-    "name": "Radarr"
-}')
-PROWLARR_RADARR_ADD_APPLICATION_RESPONSE=$(
-  curl -fsS \
-    -o /dev/null \
-    -X POST \
-    -H "Content-Type: application/json" \
+PROWLARR_RADARR_APPLICATION_REGISTERED=$(
+  curl -fsS "$PROWLARR_URL/api/v1/applications" \
     -H "X-Api-Key: $PROWLARR_API_KEY" \
-    "$PROWLARR_URL/api/v1/applications" \
-    --data-raw "$PROWLARR_RADARR_ADD_APPLICATION_PAYLOAD"
+  | jq -e '
+      .[]
+      | select(
+          .name == "Radarr"
+          and .implementation == "Radarr"
+          and any(.fields[]; .name == "baseUrl" and .value == "http://radarr:7878")
+        )
+    ' >/dev/null && echo true || echo false
 )
+if $PROWLARR_RADARR_APPLICATION_REGISTERED; then
+  echo "Prowlarr Radarr application already registered, skipping..."
+else
+  echo "Registering Prowlarr Radarr application..."
+  PROWLARR_RADARR_ADD_APPLICATION_PAYLOAD=$(jq -n \
+    --arg RADARR_API_KEY "$RADARR_API_KEY" \
+  '{
+      "syncLevel": "fullSync",
+      "enable": true,
+      "fields": [
+          {"name": "prowlarrUrl", "value": "http://prowlarr:9696"},
+          {"name": "baseUrl", "value": "http://radarr:7878"},
+          {"name": "apiKey", "value": $RADARR_API_KEY},
+          {"name": "syncCategories", "value": [2000,2010,2020,2030,2040,2045,2050,2060,2070,2080,2090]},
+          {"name": "syncRejectBlocklistedTorrentHashesWhileGrabbing", "value": false}
+      ],
+      "implementationName": "Radarr",
+      "implementation": "Radarr",
+      "configContract": "RadarrSettings",
+      "infoLink": "https://wiki.servarr.com/prowlarr/supported#radarr",
+      "tags": [],
+      "name": "Radarr"
+  }')
+  PROWLARR_RADARR_ADD_APPLICATION_RESPONSE=$(
+    curl -fsS \
+      -o /dev/null \
+      -X POST \
+      -H "Content-Type: application/json" \
+      -H "X-Api-Key: $PROWLARR_API_KEY" \
+      "$PROWLARR_URL/api/v1/applications" \
+      --data-raw "$PROWLARR_RADARR_ADD_APPLICATION_PAYLOAD"
+  )
+fi
 
-PROWLARR_SONARR_ADD_APPLICATION_PAYLOAD=$(jq -n \
-  --arg SONARR_API_KEY "$SONARR_API_KEY" \
-'{
-    "syncLevel": "fullSync",
-    "enable": true,
-    "fields": [
-        {"name": "prowlarrUrl", "value": "http://prowlarr:9696"},
-        {"name": "baseUrl", "value": "http://sonarr:8989"},
-        {"name": "apiKey", "value": $SONARR_API_KEY},
-        {"name": "syncCategories", "value": [5000,5010,5020,5030,5040,5045,5050,5090]},
-        {"name": "animeSyncCategories", "value": [5070]},
-        {"name": "syncAnimeStandardFormatSearch", "value": true},
-        {"name": "syncRejectBlocklistedTorrentHashesWhileGrabbing", "value": false}
-    ],
-    "implementationName": "Sonarr",
-    "implementation": "Sonarr",
-    "configContract": "SonarrSettings",
-    "infoLink": "https://wiki.servarr.com/prowlarr/supported#sonarr",
-    "tags": [],
-    "name": "Sonarr"
-}')
-PROWLARR_SONARR_ADD_APPLICATION_RESPONSE=$(
-  curl -fsS \
-    -o /dev/null \
-    -X POST \
-    -H "Content-Type: application/json" \
+PROWLARR_SONARR_APPLICATION_REGISTERED=$(
+  curl -fsS "$PROWLARR_URL/api/v1/applications" \
     -H "X-Api-Key: $PROWLARR_API_KEY" \
-    "$PROWLARR_URL/api/v1/applications" \
-    --data-raw "$PROWLARR_SONARR_ADD_APPLICATION_PAYLOAD"
+  | jq -e '
+      .[]
+      | select(
+          .name == "Sonarr"
+          and .implementation == "Sonarr"
+          and any(.fields[]; .name == "baseUrl" and .value == "http://sonarr:8989")
+        )
+    ' >/dev/null && echo true || echo false
 )
+if $PROWLARR_SONARR_APPLICATION_REGISTERED; then
+  echo "Prowlarr Sonarr application already registered, skipping..."
+else
+  echo "Registering Prowlarr Sonarr application..."
+  PROWLARR_SONARR_ADD_APPLICATION_PAYLOAD=$(jq -n \
+    --arg SONARR_API_KEY "$SONARR_API_KEY" \
+  '{
+      "syncLevel": "fullSync",
+      "enable": true,
+      "fields": [
+          {"name": "prowlarrUrl", "value": "http://prowlarr:9696"},
+          {"name": "baseUrl", "value": "http://sonarr:8989"},
+          {"name": "apiKey", "value": $SONARR_API_KEY},
+          {"name": "syncCategories", "value": [5000,5010,5020,5030,5040,5045,5050,5090]},
+          {"name": "animeSyncCategories", "value": [5070]},
+          {"name": "syncAnimeStandardFormatSearch", "value": true},
+          {"name": "syncRejectBlocklistedTorrentHashesWhileGrabbing", "value": false}
+      ],
+      "implementationName": "Sonarr",
+      "implementation": "Sonarr",
+      "configContract": "SonarrSettings",
+      "infoLink": "https://wiki.servarr.com/prowlarr/supported#sonarr",
+      "tags": [],
+      "name": "Sonarr"
+  }')
+  PROWLARR_SONARR_ADD_APPLICATION_RESPONSE=$(
+    curl -fsS \
+      -o /dev/null \
+      -X POST \
+      -H "Content-Type: application/json" \
+      -H "X-Api-Key: $PROWLARR_API_KEY" \
+      "$PROWLARR_URL/api/v1/applications" \
+      --data-raw "$PROWLARR_SONARR_ADD_APPLICATION_PAYLOAD"
+  )
+fi
 
 # echo "${JELLYFIN_API_KEYS["Radarr"]}"
 # echo "${JELLYFIN_API_KEYS["Sonarr"]}"
