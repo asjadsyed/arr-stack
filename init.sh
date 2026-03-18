@@ -500,93 +500,129 @@ else
 fi
 
 # sleep 5
-RADARR_DOWNLOAD_CLIENT_PAYLOAD=$(jq -n \
-  --arg QBITTORRENT_USERNAME "$QBITTORRENT_USERNAME" \
-  --arg QBITTORRENT_PASSWORD "$QBITTORRENT_PASSWORD" \
-  --arg RADARR_CATEGORY "$RADARR_CATEGORY" \
-'{
-  "enable": true,
-  "protocol": "torrent",
-  "priority": 1,
-  "removeCompletedDownloads": true,
-  "removeFailedDownloads": true,
-  "name": "qBittorrent",
-  "fields": [
-    {"name": "host","value": "qbittorrent"},
-    {"name": "port","value": 8080},
-    {"name": "useSsl","value": false},
-    {"name": "urlBase"},
-    {"name": "username","value": $QBITTORRENT_USERNAME},
-    {"name": "password","value": $QBITTORRENT_PASSWORD},
-    {"name": "movieCategory","value": $RADARR_CATEGORY},
-    {"name": "movieImportedCategory"},
-    {"name": "recentMoviePriority","value": 0},
-    {"name": "olderMoviePriority","value": 0},
-    {"name": "initialState","value": 0},
-    {"name": "sequentialOrder","value": false},
-    {"name": "firstAndLast","value": false},
-    {"name": "contentLayout","value": 0}
-  ],
-  "implementationName": "qBittorrent",
-  "implementation": "QBittorrent",
-  "configContract": "QBittorrentSettings",
-  "infoLink": "https://wiki.servarr.com/radarr/supported#qbittorrent",
-  "tags": []
-}'
-)
 
-RADARR_DOWNLOAD_CLIENT_RESPONSE=$(
-  curl -fsS \
-    -X POST \
-    -H "Content-Type: application/json" \
+RADARR_DOWNLOAD_CLIENT_REGISTERED=$(
+  curl -fsS "$RADARR_URL/api/v3/downloadclient" \
     -H "X-Api-Key: $RADARR_API_KEY" \
-    "$RADARR_URL/api/v3/downloadclient" \
-    --data-raw "$RADARR_DOWNLOAD_CLIENT_PAYLOAD"
+  | jq -e '
+      .[]
+      | select(
+          .name == "qBittorrent"
+          and .implementation == "QBittorrent"
+          and any(.fields[]; .name == "host" and .value == "qbittorrent")
+          and any(.fields[]; .name == "port" and .value == 8080)
+        )
+    ' >/dev/null && echo true || echo false
 )
+if $RADARR_DOWNLOAD_CLIENT_REGISTERED; then
+  echo "Radarr download client already registered, skipping..."
+else
+  echo "Registering Radarr download client..."
+  RADARR_DOWNLOAD_CLIENT_PAYLOAD=$(jq -n \
+    --arg QBITTORRENT_USERNAME "$QBITTORRENT_USERNAME" \
+    --arg QBITTORRENT_PASSWORD "$QBITTORRENT_PASSWORD" \
+    --arg RADARR_CATEGORY "$RADARR_CATEGORY" \
+  '{
+    "enable": true,
+    "protocol": "torrent",
+    "priority": 1,
+    "removeCompletedDownloads": true,
+    "removeFailedDownloads": true,
+    "name": "qBittorrent",
+    "fields": [
+      {"name": "host","value": "qbittorrent"},
+      {"name": "port","value": 8080},
+      {"name": "useSsl","value": false},
+      {"name": "urlBase"},
+      {"name": "username","value": $QBITTORRENT_USERNAME},
+      {"name": "password","value": $QBITTORRENT_PASSWORD},
+      {"name": "movieCategory","value": $RADARR_CATEGORY},
+      {"name": "movieImportedCategory"},
+      {"name": "recentMoviePriority","value": 0},
+      {"name": "olderMoviePriority","value": 0},
+      {"name": "initialState","value": 0},
+      {"name": "sequentialOrder","value": false},
+      {"name": "firstAndLast","value": false},
+      {"name": "contentLayout","value": 0}
+    ],
+    "implementationName": "qBittorrent",
+    "implementation": "QBittorrent",
+    "configContract": "QBittorrentSettings",
+    "infoLink": "https://wiki.servarr.com/radarr/supported#qbittorrent",
+    "tags": []
+  }'
+  )
+  RADARR_DOWNLOAD_CLIENT_RESPONSE=$(
+    curl -fsS \
+      -X POST \
+      -H "Content-Type: application/json" \
+      -H "X-Api-Key: $RADARR_API_KEY" \
+      "$RADARR_URL/api/v3/downloadclient" \
+      --data-raw "$RADARR_DOWNLOAD_CLIENT_PAYLOAD"
+  )
+fi
 
-SONARR_DOWNLOAD_CLIENT_PAYLOAD=$(jq -n \
-  --arg QBITTORRENT_USERNAME "$QBITTORRENT_USERNAME" \
-  --arg QBITTORRENT_PASSWORD "$QBITTORRENT_PASSWORD" \
-  --arg SONARR_CATEGORY "$SONARR_CATEGORY" \
-'{
-  "enable": true,
-  "protocol": "torrent",
-  "priority": 1,
-  "removeCompletedDownloads": true,
-  "removeFailedDownloads": true,
-  "name": "qBittorrent",
-  "fields": [
-    {"name": "host","value": "qbittorrent"},
-    {"name": "port","value": 8080},
-    {"name": "useSsl","value": false},
-    {"name": "urlBase"},
-    {"name": "username","value": $QBITTORRENT_USERNAME},
-    {"name": "password","value": $QBITTORRENT_PASSWORD},
-    {"name": "tvCategory","value": $SONARR_CATEGORY},
-    {"name": "tvImportedCategory"},
-    {"name": "recentTvPriority","value": 0},
-    {"name": "olderTvPriority","value": 0},
-    {"name": "initialState","value": 0},
-    {"name": "sequentialOrder","value": false},
-    {"name": "firstAndLast","value": false},
-    {"name": "contentLayout","value": 0}
-  ],
-  "implementationName": "qBittorrent",
-  "implementation": "QBittorrent",
-  "configContract": "QBittorrentSettings",
-  "infoLink": "https://wiki.servarr.com/sonarr/supported#qbittorrent",
-  "tags": []
-}'
-)
-SONARR_DOWNLOAD_CLIENT_RESPONSE=$(
-  curl -fsS \
-    -o /dev/null \
-    -X POST \
-    -H "Content-Type: application/json" \
+SONARR_DOWNLOAD_CLIENT_REGISTERED=$(
+  curl -fsS "$SONARR_URL/api/v3/downloadclient" \
     -H "X-Api-Key: $SONARR_API_KEY" \
-    "$SONARR_URL/api/v3/downloadclient" \
-    --data-raw "$SONARR_DOWNLOAD_CLIENT_PAYLOAD"
+  | jq -e '
+      .[]
+      | select(
+          .name == "qBittorrent"
+          and .implementation == "QBittorrent"
+          and any(.fields[]; .name == "host" and .value == "qbittorrent")
+          and any(.fields[]; .name == "port" and .value == 8080)
+        )
+    ' >/dev/null && echo true || echo false
 )
+if $SONARR_DOWNLOAD_CLIENT_REGISTERED; then
+  echo "Sonarr download client already registered, skipping..."
+else
+  echo "Registering Sonarr download client..."
+  SONARR_DOWNLOAD_CLIENT_PAYLOAD=$(jq -n \
+    --arg QBITTORRENT_USERNAME "$QBITTORRENT_USERNAME" \
+    --arg QBITTORRENT_PASSWORD "$QBITTORRENT_PASSWORD" \
+    --arg SONARR_CATEGORY "$SONARR_CATEGORY" \
+  '{
+    "enable": true,
+    "protocol": "torrent",
+    "priority": 1,
+    "removeCompletedDownloads": true,
+    "removeFailedDownloads": true,
+    "name": "qBittorrent",
+    "fields": [
+      {"name": "host","value": "qbittorrent"},
+      {"name": "port","value": 8080},
+      {"name": "useSsl","value": false},
+      {"name": "urlBase"},
+      {"name": "username","value": $QBITTORRENT_USERNAME},
+      {"name": "password","value": $QBITTORRENT_PASSWORD},
+      {"name": "tvCategory","value": $SONARR_CATEGORY},
+      {"name": "tvImportedCategory"},
+      {"name": "recentTvPriority","value": 0},
+      {"name": "olderTvPriority","value": 0},
+      {"name": "initialState","value": 0},
+      {"name": "sequentialOrder","value": false},
+      {"name": "firstAndLast","value": false},
+      {"name": "contentLayout","value": 0}
+    ],
+    "implementationName": "qBittorrent",
+    "implementation": "QBittorrent",
+    "configContract": "QBittorrentSettings",
+    "infoLink": "https://wiki.servarr.com/sonarr/supported#qbittorrent",
+    "tags": []
+  }'
+  )
+  SONARR_DOWNLOAD_CLIENT_RESPONSE=$(
+    curl -fsS \
+      -o /dev/null \
+      -X POST \
+      -H "Content-Type: application/json" \
+      -H "X-Api-Key: $SONARR_API_KEY" \
+      "$SONARR_URL/api/v3/downloadclient" \
+      --data-raw "$SONARR_DOWNLOAD_CLIENT_PAYLOAD"
+  )
+fi
 
 # Setup Radarr/Sonarr with Prowlarr
 
