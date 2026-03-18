@@ -68,14 +68,17 @@ if [ "$JELLYFIN_STARTUP_WIZARD_COMPLETED" != "true" ]; then
   echo "Jellyfin startup wizard not completed yet; running first-run setup"
 
   JELLYFIN_CONFIGURATION_PAYLOAD='{"UICulture":"en-US","MetadataCountryCode":"US","PreferredMetadataLanguage":"en"}'
-  JELLYFIN_CONFIGURATION_RESPONSE=$(
+  until JELLYFIN_CONFIGURATION_RESPONSE=$(
     curl -fsS "$JELLYFIN_URL/Startup/Configuration" \
-      -o /dev/null \
       -X POST \
       -H "$JELLYFIN_AUTHORIZATION_HEADER" \
       -H "Content-Type: application/json" \
       --data-raw "$JELLYFIN_CONFIGURATION_PAYLOAD"
   )
+  do
+    echo "Jellyfin startup configuration not ready yet, retrying..."
+    sleep 1
+  done
 
   # GET with side-effects
   JELLYFIN_SET_UP_DEFAULT_USER_RESPONSE=$(
