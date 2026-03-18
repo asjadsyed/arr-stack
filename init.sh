@@ -433,6 +433,24 @@ SETUP_PROWLARR_AUTHENTICATION_RESPONSE=$(
 )
 # sleep 5
 
+RADARR_IMPORT_EXTRA_FILES_PAYLOAD='{"skipFreeSpaceCheckWhenImporting":false,"minimumFreeSpaceWhenImporting":100,"importExtraFiles":true,"extraFileExtensions":"srt","id":1}'
+RADARR_IMPORT_EXTRA_FILES_RESPONSE=$(
+  curl -fsS "$RADARR_URL/api/v3/config/mediamanagement" \
+    -X PUT \
+    -H "Content-Type: application/json" \
+    -H "X-Api-Key: $RADARR_API_KEY" \
+    --data-raw "$RADARR_IMPORT_EXTRA_FILES_PAYLOAD"
+)
+
+SONARR_IMPORT_EXTRA_FILES_PAYLOAD='{"skipFreeSpaceCheckWhenImporting":false,"minimumFreeSpaceWhenImporting":100,"importExtraFiles":true,"extraFileExtensions":"srt","id":1}'
+SONARR_IMPORT_EXTRA_FILES_RESPONSE=$(
+  curl -fsS "$SONARR_URL/api/v3/config/mediamanagement" \
+    -X PUT \
+    -H "Content-Type: application/json" \
+    -H "X-Api-Key: $SONARR_API_KEY" \
+    --data-raw "$SONARR_IMPORT_EXTRA_FILES_PAYLOAD"
+)
+
 RADARR_ROOT_FOLDER_PAYLOAD=$(jq -n \
   --arg RADARR_ROOT "$RADARR_ROOT" \
 '{
