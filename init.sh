@@ -1017,4 +1017,4 @@ echo "Done adding indexers to Prowlarr, re-enabling xtrace"
 
 echo "Finished init"
 # sleep to allow docker exec'ing into for debugging
-sleep 10000000000000000000
+sleep infinity
