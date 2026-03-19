@@ -10,7 +10,7 @@ services:
       - TZ=America/New_York
       # Optional - alternative address used for autodiscovery
       # - JELLYFIN_PublishedServerUrl=http://example.com
-      - JELLYFIN_PublishedServerUrl=http://localhost:8096
+      - JELLYFIN_PublishedServerUrl=${JELLYFIN_PUBLISHED_SERVER_URL:-}
     ports:
       - 8096:8096/tcp # HTTP
       - 8920:8920/tcp # HTTPS
