@@ -10,7 +10,7 @@ services:
       - TZ=America/New_York
       # Optional - alternative address used for autodiscovery
       # - JELLYFIN_PublishedServerUrl=http://example.com
-      - JELLYFIN_PublishedServerUrl=${JELLYFIN_PUBLISHED_SERVER_URL:-}
+      - JELLYFIN_PublishedServerUrl=${JELLYFIN_EXTERNAL_URL:-}
     ports:
       - 8096:8096/tcp # HTTP
       - 8920:8920/tcp # HTTPS
@@ -159,6 +159,9 @@ services:
       - PROWLARR_PASSWORD=${PROWLARR_PASSWORD}
       - QBITTORRENT_USERNAME=${QBITTORRENT_USERNAME}
       - QBITTORRENT_PASSWORD=${QBITTORRENT_PASSWORD}
+      - JELLYFIN_EXTERNAL_URL=${JELLYFIN_EXTERNAL_URL:-http://localhost:8096}
+      - RADARR_EXTERNAL_URL=${RADARR_EXTERNAL_URL:-http://localhost:7878}
+      - SONARR_EXTERNAL_URL=${SONARR_EXTERNAL_URL:-http://localhost:8989}
 
 volumes:
   qbittorrent_config:

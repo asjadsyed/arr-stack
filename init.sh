@@ -278,11 +278,12 @@ fi
 
 cat "$COOKIE_JAR"
 
-# Set External URL for Jellyfin to localhost:8096 in Jellyseerr settings
+# Set External URL for Jellyfin to $JELLYFIN_EXTERNAL_URL (e.g. localhost:8096) in Jellyseerr settings
 JELLYFIN_JELLYSEERR_SETTINGS_PAYLOAD=$(jq -n \
+  --arg JELLYFIN_EXTERNAL_URL "${JELLYFIN_EXTERNAL_URL}" \
   --arg JELLYFIN_JELLYSEERR_API_KEY "${JELLYFIN_API_KEYS["Jellyseerr"]}" \
 '{
-  "ip":"jellyfin","port":8096,"useSsl":false,"urlBase":"","externalHostname":"http://localhost:8096","jellyfinForgotPasswordUrl":"","apiKey":$JELLYFIN_JELLYSEERR_API_KEY
+  "ip":"jellyfin","port":8096,"useSsl":false,"urlBase":"","externalHostname":$JELLYFIN_EXTERNAL_URL,"jellyfinForgotPasswordUrl":"","apiKey":$JELLYFIN_JELLYSEERR_API_KEY
 }'
 )
 JELLYFIN_JELLYSEERR_SETTINGS_RESPONSE=$(
@@ -326,9 +327,10 @@ if [ "$RADARR_EXISTS" != "true" ]; then
   # note: I set "syncEnabled":true
   JELLYSEERR_SETTINGS_RADARR_PAYLOAD=$(jq -n \
     --arg RADARR_API_KEY "$RADARR_API_KEY" \
+    --arg RADARR_EXTERNAL_URL "${RADARR_EXTERNAL_URL}" \
     --arg RADARR_ROOT "$RADARR_ROOT" \
   '{
-  "name":"Radarr","hostname":"radarr","port":7878,"apiKey":$RADARR_API_KEY,"useSsl":false,"baseUrl":"","externalUrl":"http://localhost:7878","activeProfileId":1,"activeProfileName":"Any","activeDirectory":$RADARR_ROOT,"is4k":false,"minimumAvailability":"released","tags":[],"isDefault":true,"syncEnabled":true,"preventSearch":false,"tagRequests":false
+  "name":"Radarr","hostname":"radarr","port":7878,"apiKey":$RADARR_API_KEY,"useSsl":false,"baseUrl":"","externalUrl":$RADARR_EXTERNAL_URL,"activeProfileId":1,"activeProfileName":"Any","activeDirectory":$RADARR_ROOT,"is4k":false,"minimumAvailability":"released","tags":[],"isDefault":true,"syncEnabled":true,"preventSearch":false,"tagRequests":false
   }'
   )
   JELLYSEERR_SETTINGS_RADARR_RESPONSE=$(
@@ -346,9 +348,10 @@ if [ "$SONARR_EXISTS" != "true" ]; then
   echo "Setting up Jellyseerr with Sonarr..."
   JELLYSEERR_SETTINGS_SONARR_PAYLOAD=$(jq -n \
     --arg SONARR_API_KEY "$SONARR_API_KEY" \
+    --arg SONARR_EXTERNAL_URL "${SONARR_EXTERNAL_URL}" \
     --arg SONARR_ROOT "$SONARR_ROOT" \
   '{
-  "name":"Sonarr","hostname":"sonarr","port":8989,"apiKey":$SONARR_API_KEY,"useSsl":false,"baseUrl":"","externalUrl":"http://localhost:8989","activeProfileId":1,"activeProfileName":"Any","activeDirectory":$SONARR_ROOT,"activeAnimeDirectory":"","tags":[],"animeTags":[],"is4k":false,"isDefault":true,"enableSeasonFolders":false,"syncEnabled":true,"preventSearch":false,"tagRequests":false
+  "name":"Sonarr","hostname":"sonarr","port":8989,"apiKey":$SONARR_API_KEY,"useSsl":false,"baseUrl":"","externalUrl":$SONARR_EXTERNAL_URL,"activeProfileId":1,"activeProfileName":"Any","activeDirectory":$SONARR_ROOT,"activeAnimeDirectory":"","tags":[],"animeTags":[],"is4k":false,"isDefault":true,"enableSeasonFolders":false,"syncEnabled":true,"preventSearch":false,"tagRequests":false
   }'
   )
   JELLYSEERR_SETTINGS_SONARR_RESPONSE=$(
@@ -377,10 +380,6 @@ curl -fsS "$JELLYSEERR_URL/api/v1/settings/main" \
   -b "$COOKIE_JAR" \
   -H 'Content-Type: application/json' \
   --data-raw "$JELLYSEERR_SETTINGS_LOCALE_PAYLOAD"
-
-
-
-
 
 # setup radarr authentication
 SETUP_RADARR_AUTHENTICATION_PAYLOAD=$(jq -n \
