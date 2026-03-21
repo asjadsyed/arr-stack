@@ -911,6 +911,7 @@ LIMETORRENTS_INDEXER_REGISTERED=$(prowlarr_indexer_registered "LimeTorrents" "Ca
 THE_PIRATE_BAY_INDEXER_REGISTERED=$(prowlarr_indexer_registered "The Pirate Bay" "Cardigann" "thepiratebay")
 TORRENTDOWNLOAD_INDEXER_REGISTERED=$(prowlarr_indexer_registered "TorrentDownload" "Cardigann" "torrentdownload")
 TORRENTGALAXYCLONE_INDEXER_REGISTERED=$(prowlarr_indexer_registered "TorrentGalaxyClone" "Cardigann" "torrentgalaxyclone")
+YTS_INDEXER_REGISTERED=$(prowlarr_indexer_registered "YTS" "Cardigann" "yts")
 
 echo "BitSearch indexer already registered: $BITSEARCH_INDEXER_REGISTERED"
 echo "kickasstorrents.ws indexer already registered: $KICKASSTORRENTS_WS_INDEXER_REGISTERED"
@@ -919,6 +920,7 @@ echo "LimeTorrents indexer already registered: $LIMETORRENTS_INDEXER_REGISTERED"
 echo "The Pirate Bay indexer already registered: $THE_PIRATE_BAY_INDEXER_REGISTERED"
 echo "TorrentDownload indexer already registered: $TORRENTDOWNLOAD_INDEXER_REGISTERED"
 echo "TorrentGalaxyClone indexer already registered: $TORRENTGALAXYCLONE_INDEXER_REGISTERED"
+echo "YTS indexer already registered: $YTS_INDEXER_REGISTERED"
 
 # adding BitSearch to prowlarr
 if $BITSEARCH_INDEXER_REGISTERED; then
@@ -1009,6 +1011,19 @@ else
     -H "Content-Type: application/json" \
     -H "X-Api-Key: $PROWLARR_API_KEY" \
     --data-raw '{"indexerUrls":["https://torrentgalaxy.one/","https://torrentgalaxy.info/","https://torrentgalaxy.space/"],"legacyUrls":[],"definitionName":"torrentgalaxyclone","description":"TorrentGalaxyClone is a Public site for MOVIES / TV / GENERAL","language":"en-US","enable":true,"redirect":false,"supportsRss":true,"supportsSearch":true,"supportsRedirect":false,"supportsPagination":false,"appProfileId":1,"protocol":"torrent","privacy":"public","capabilities":{"limitsMax":100,"limitsDefault":100,"categories":[{"id":5000,"name":"TV","subCategories":[{"id":5070,"name":"TV/Anime","subCategories":[]},{"id":5080,"name":"TV/Documentary","subCategories":[]}]},{"id":4000,"name":"PC","subCategories":[]},{"id":7000,"name":"Books","subCategories":[]},{"id":1000,"name":"Console","subCategories":[]},{"id":2000,"name":"Movies","subCategories":[]},{"id":3000,"name":"Audio","subCategories":[]},{"id":8000,"name":"Other","subCategories":[]},{"id":6000,"name":"XXX","subCategories":[]}],"supportsRawSearch":false,"searchParams":["q","q"],"tvSearchParams":["q","season","ep","imdbId"],"movieSearchParams":["q","imdbId"],"musicSearchParams":["q"],"bookSearchParams":["q"]},"priority":25,"downloadClientId":0,"added":"0001-01-01T04:57:00Z","sortName":"torrentgalaxyclone","name":"TorrentGalaxyClone","fields":[{"name":"definitionFile","value":"torrentgalaxyclone"},{"name":"baseUrl"},{"name":"baseSettings.queryLimit"},{"name":"baseSettings.grabLimit"},{"name":"baseSettings.limitsUnit","value":0},{"name":"torrentBaseSettings.appMinimumSeeders"},{"name":"torrentBaseSettings.seedRatio"},{"name":"torrentBaseSettings.seedTime"},{"name":"torrentBaseSettings.packSeedTime"},{"name":"torrentBaseSettings.preferMagnetUrl","value":false},{"name":"uploader"},{"name":"info_uploader","value":"You can filter by Uploader by entering a Case Sensitive username, or leave empty to get all results.<br>Note: this is the username of the Uploader and not the Groupname that often show up at the end of TGx titles, eg RMTeam."}],"implementationName":"Cardigann","implementation":"Cardigann","configContract":"CardigannSettings","infoLink":"https://wiki.servarr.com/prowlarr/supported-indexers#torrentgalaxyclone","tags":[]}'
+fi
+
+# adding YTS to prowlarr
+if $YTS_INDEXER_REGISTERED; then
+  echo "YTS indexer already registered, skipping..."
+else
+  echo "Registering YTS indexer..."
+  curl -sS "$PROWLARR_URL/api/v1/indexer" \
+    -o /dev/null \
+    -X POST \
+    -H "Content-Type: application/json" \
+    -H "X-Api-Key: $PROWLARR_API_KEY" \
+    --data-raw '{"indexerUrls":["https://yts.bz/","https://yts.unblockninja.com/","https://yts.ninjaproxy1.com/","https://yts.proxyninja.org/","https://yts.proxyninja.net/","https://yts.torrentbay.st/","https://yts.torrentsbay.org/"],"legacyUrls":["https://yts.am/","https://yts.ag/","https://yts.gg/","https://yts.mx/","https://yts.mrunblock.bond/","https://yts.nocensor.cloud/","https://yts.unblockit.download/","https://yts.lt/"],"definitionName":"yts","description":"YTS is a Public torrent site specialising in HD movies of small size","language":"en-US","enable":true,"redirect":false,"supportsRss":true,"supportsSearch":true,"supportsRedirect":false,"supportsPagination":false,"appProfileId":1,"protocol":"torrent","privacy":"public","capabilities":{"limitsMax":100,"limitsDefault":100,"categories":[{"id":2000,"name":"Movies","subCategories":[{"id":2040,"name":"Movies/HD","subCategories":[]},{"id":2045,"name":"Movies/UHD","subCategories":[]},{"id":2060,"name":"Movies/3D","subCategories":[]}]}],"supportsRawSearch":false,"searchParams":["q","q"],"tvSearchParams":[],"movieSearchParams":["q","imdbId"],"musicSearchParams":[],"bookSearchParams":[]},"priority":25,"downloadClientId":0,"added":"0001-01-01T04:57:00Z","sortName":"yts","name":"YTS","fields":[{"name":"definitionFile","value":"yts"},{"name":"baseUrl"},{"name":"baseSettings.queryLimit"},{"name":"baseSettings.grabLimit"},{"name":"baseSettings.limitsUnit","value":0},{"name":"torrentBaseSettings.appMinimumSeeders"},{"name":"torrentBaseSettings.seedRatio"},{"name":"torrentBaseSettings.seedTime"},{"name":"torrentBaseSettings.packSeedTime"},{"name":"torrentBaseSettings.preferMagnetUrl","value":false}],"implementationName":"Cardigann","implementation":"Cardigann","configContract":"CardigannSettings","infoLink":"https://wiki.servarr.com/prowlarr/supported-indexers#yts","tags":[]}'
 fi
 
 set -x
