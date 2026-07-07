@@ -17,8 +17,8 @@ services:
       - 7359:7359/udp
       - 1900:1900/udp
     volumes:
-      - ${ROOT_DIR_OVERRIDE:-./root}/config/jellyfin-config:/config
-      - ${ROOT_DIR_OVERRIDE:-./root}/cache/jellyfin-cache:/cache
+      - jellyfin-config:/config
+      - jellyfin-cache:/cache
       - ${ROOT_DIR_OVERRIDE:-./root}/data:/data
     restart: "unless-stopped"
     # Optional - may be necessary for docker healthcheck to pass if running in host network mode
@@ -39,7 +39,7 @@ services:
     ports:
       - 5055:5055
     volumes:
-      - ${ROOT_DIR_OVERRIDE:-./root}/config/jellyseerr-config:/app/config
+      - jellyseerr-config:/app/config
     restart: unless-stopped
 
   radarr:
@@ -53,7 +53,7 @@ services:
     ports:
       - 7878:7878
     volumes:
-      - ${ROOT_DIR_OVERRIDE:-./root}/config/radarr-config:/config
+      - radarr-config:/config
       # You are using docker; download client qBittorrent places downloads in /data/torrents but this directory does not appear to exist inside the container. Review your remote path mappings and container volume settings.
       - ${ROOT_DIR_OVERRIDE:-./root}/data:/data
     restart: unless-stopped
@@ -69,9 +69,8 @@ services:
     ports:
       - 8989:8989
     volumes:
-      - ${ROOT_DIR_OVERRIDE:-./root}/config/sonarr-config:/config
+      - sonarr-config:/config
       - ${ROOT_DIR_OVERRIDE:-./root}/data:/data
-      - ${ROOT_DIR_OVERRIDE:-./root}/opt/sonarr:/opt/sonarr
     restart: unless-stopped
 
   # lidarr:
@@ -84,7 +83,7 @@ services:
   #  ports:
   #    - 8686:8686
   #  volumes:
-  #    - ${ROOT_DIR_OVERRIDE:-./root}/config/lidarr-config:/config
+  #    - lidarr-config:/config
   #    - ${ROOT_DIR_OVERRIDE:-./root}/data:/data
   #  restart: unless-stopped
 
@@ -99,7 +98,7 @@ services:
     ports:
       - 9696:9696
     volumes:
-      - ${ROOT_DIR_OVERRIDE:-./root}/config/prowlarr-config:/config
+      - prowlarr-config:/config
     restart: unless-stopped
 
   qbittorrent:
@@ -121,7 +120,7 @@ services:
       - 6881:6881
       - 6881:6881/udp
     volumes:
-      - qbittorrent_config:/config
+      - qbittorrent-config:/config
       - ${ROOT_DIR_OVERRIDE:-./root}/data:/data
     restart: unless-stopped
 
@@ -140,10 +139,12 @@ services:
       prowlarr: { condition: service_started }
       qbittorrent: { condition: service_started }
     volumes:
-      - ${ROOT_DIR_OVERRIDE:-./root}/config/:/config/:ro
+      - jellyfin-config:/config/jellyfin-config/:ro
+      - jellyseerr-config:/config/jellyseerr-config/:ro
+      - radarr-config:/config/radarr-config/:ro
+      - sonarr-config:/config/sonarr-config/:ro
+      - prowlarr-config:/config/prowlarr-config/:ro
       - ${ROOT_DIR_OVERRIDE:-./root}/data:/data
-      # - ${ROOT_DIR_OVERRIDE:-./root}/opt/init:/opt/init
-      # - init:/opt/init
     restart: "no"
     env_file:
       - .env
@@ -164,5 +165,11 @@ services:
       - SONARR_EXTERNAL_URL=${SONARR_EXTERNAL_URL:-http://localhost:8989}
 
 volumes:
-  qbittorrent_config:
-  # init:
+  jellyfin-config:
+  jellyfin-cache:
+  jellyseerr-config:
+  radarr-config:
+  sonarr-config:
+  # lidarr-config:
+  prowlarr-config:
+  qbittorrent-config:
