@@ -208,7 +208,10 @@ JELLYFIN_USER_CONFIGURATION=$(echo "$JELLYFIN_AUTHENTICATE_BY_NAME_RESPONSE" | j
 # JELLYFIN_USER_CONFIGURATION='{"PlayDefaultAudioTrack":true,"SubtitleLanguagePreference":"","DisplayMissingEpisodes":false,"GroupedFolders":[],"SubtitleMode":"Default","DisplayCollectionsView":false,"EnableLocalPassword":false,"OrderedViews":[],"LatestItemsExcludes":[],"MyMediaExcludes":[],"HidePlayedInLatest":true,"RememberAudioSelections":true,"RememberSubtitleSelections":true,"EnableNextEpisodeAutoPlay":true,"CastReceiverId":"F007D354"}'
 JELLYFIN_USER_CONFIGURATION_PAYLOAD=$(
   echo "$JELLYFIN_USER_CONFIGURATION" |
-    jq '.SubtitleLanguagePreference = "eng"'
+    jq '
+    .SubtitleLanguagePreference = "eng"
+    | .AudioLanguagePreference = "eng"
+    '
 )
 JELLYFIN_USER_CONFIGURATION_RESPONSE=$(
   curl -fsS "$JELLYFIN_URL/Users/$JELLYFIN_USER_ID/Configuration" \
