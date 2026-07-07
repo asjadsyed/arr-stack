@@ -197,6 +197,27 @@ JELLYFIN_AUTHENTICATE_BY_NAME_RESPONSE=$(
 TOKEN=$(echo "$JELLYFIN_AUTHENTICATE_BY_NAME_RESPONSE" | jq -r .AccessToken)
 echo "$TOKEN"
 
+JELLYFIN_USER_AUTHORIZATION_HEADER=$(printf \
+  'Authorization: MediaBrowser Client="setup", Device="docker", DeviceId="setup-1", Version="10.10.7", Token="%s"' \
+  "$TOKEN"
+)
+
+# Preferred subtitle language: English
+JELLYFIN_USER_ID=$(echo "$JELLYFIN_AUTHENTICATE_BY_NAME_RESPONSE" | jq -r .User.Id)
+JELLYFIN_USER_CONFIGURATION=$(echo "$JELLYFIN_AUTHENTICATE_BY_NAME_RESPONSE" | jq .User.Configuration)
+# JELLYFIN_USER_CONFIGURATION='{"PlayDefaultAudioTrack":true,"SubtitleLanguagePreference":"","DisplayMissingEpisodes":false,"GroupedFolders":[],"SubtitleMode":"Default","DisplayCollectionsView":false,"EnableLocalPassword":false,"OrderedViews":[],"LatestItemsExcludes":[],"MyMediaExcludes":[],"HidePlayedInLatest":true,"RememberAudioSelections":true,"RememberSubtitleSelections":true,"EnableNextEpisodeAutoPlay":true,"CastReceiverId":"F007D354"}'
+JELLYFIN_USER_CONFIGURATION_PAYLOAD=$(
+  echo "$JELLYFIN_USER_CONFIGURATION" |
+    jq '.SubtitleLanguagePreference = "eng"'
+)
+JELLYFIN_USER_CONFIGURATION_RESPONSE=$(
+  curl -fsS "$JELLYFIN_URL/Users/$JELLYFIN_USER_ID/Configuration" \
+    -X POST \
+    -H "$JELLYFIN_USER_AUTHORIZATION_HEADER" \
+    -H "Content-Type: application/json" \
+    --data-raw "$JELLYFIN_USER_CONFIGURATION_PAYLOAD"
+)
+
 APPS=(
   "Jellyseerr"
   "Radarr"
