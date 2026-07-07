@@ -221,6 +221,29 @@ JELLYFIN_USER_CONFIGURATION_RESPONSE=$(
     --data-raw "$JELLYFIN_USER_CONFIGURATION_PAYLOAD"
 )
 
+# Skip forward length: 5 seconds
+# Skip back length: 5 seconds
+JELLYFIN_USER_DISPLAY_PREFERENCES=$(
+  curl "$JELLYFIN_URL/DisplayPreferences/usersettings?userId=$JELLYFIN_USER_ID&client=emby" \
+    -H "Accept: application/json" \
+    -H "$JELLYFIN_USER_AUTHORIZATION_HEADER"
+)
+# JELLYFIN_USER_DISPLAY_PREFERENCES='{"Id":"3ce5b65d-e116-d731-65d1-efc4a30ec35c","SortBy":"SortName","RememberIndexing":false,"PrimaryImageHeight":250,"PrimaryImageWidth":250,"CustomPrefs":{"chromecastVersion":"stable","skipForwardLength":"30000","skipBackLength":"10000","enableNextVideoInfoOverlay":"true","tvhome":null,"dashboardTheme":null},"ScrollDirection":"Horizontal","ShowBackdrop":true,"RememberSorting":false,"SortOrder":"Ascending","ShowSidebar":false,"Client":"emby"}'
+JELLYFIN_USER_DISPLAY_PREFERENCES_PAYLOAD=$(
+  echo "$JELLYFIN_USER_DISPLAY_PREFERENCES" |
+    jq '
+    .CustomPrefs.skipForwardLength = "5000"
+    | .CustomPrefs.skipBackLength = "5000"
+    '
+)
+JELLYFIN_USER_DISPLAY_PREFERENCES_RESPONSE=$(
+  curl -fsS "$JELLYFIN_URL/DisplayPreferences/usersettings?userId=$JELLYFIN_USER_ID&client=emby" \
+    -X POST \
+    -H "$JELLYFIN_USER_AUTHORIZATION_HEADER" \
+    -H "Content-Type: application/json" \
+    --data-raw "$JELLYFIN_USER_DISPLAY_PREFERENCES_PAYLOAD"
+)
+
 APPS=(
   "Jellyseerr"
   "Radarr"
