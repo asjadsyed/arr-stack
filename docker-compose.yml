@@ -73,6 +73,20 @@ services:
       - ${ROOT_DIR_OVERRIDE:-./root}/data:/data
     restart: unless-stopped
 
+  bazarr:
+    image: lscr.io/linuxserver/bazarr:v1.6.0-ls363@sha256:84b6f05a7a4194fafe5a0bec062d32f6ae9ea74db33d43d678cb9a3191f31c24
+    container_name: bazarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/New_York
+    ports:
+      - 6767:6767
+    volumes:
+      - bazarr-config:/config
+      - ${ROOT_DIR_OVERRIDE:-./root}/data:/data
+    restart: unless-stopped
+
   # lidarr:
   #  image: lscr.io/linuxserver/lidarr:3.1.0.4875@sha256:dbffcf91da47d48e09e613857032c95a62755b928a71a7718688e3ab03fbbd26
   #  container_name: lidarr
@@ -136,6 +150,7 @@ services:
       jellyseerr: { condition: service_started }
       radarr: { condition: service_started }
       sonarr: { condition: service_started }
+      bazarr: { condition: service_started }
       prowlarr: { condition: service_started }
       qbittorrent: { condition: service_started }
     volumes:
@@ -143,6 +158,7 @@ services:
       - jellyseerr-config:/config/jellyseerr-config/:ro
       - radarr-config:/config/radarr-config/:ro
       - sonarr-config:/config/sonarr-config/:ro
+      - bazarr-config:/config/bazarr-config/:ro
       - prowlarr-config:/config/prowlarr-config/:ro
       - ${ROOT_DIR_OVERRIDE:-./root}/data:/data
     restart: "no"
@@ -156,6 +172,8 @@ services:
       - RADARR_PASSWORD=${RADARR_PASSWORD}
       - SONARR_USERNAME=${SONARR_USERNAME}
       - SONARR_PASSWORD=${SONARR_PASSWORD}
+      - BAZARR_USERNAME=${BAZARR_USERNAME}
+      - BAZARR_PASSWORD=${BAZARR_PASSWORD}
       - PROWLARR_USERNAME=${PROWLARR_USERNAME}
       - PROWLARR_PASSWORD=${PROWLARR_PASSWORD}
       - QBITTORRENT_USERNAME=${QBITTORRENT_USERNAME}
@@ -170,6 +188,7 @@ volumes:
   jellyseerr-config:
   radarr-config:
   sonarr-config:
+  bazarr-config:
   # lidarr-config:
   prowlarr-config:
   qbittorrent-config:

@@ -6,6 +6,7 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         curl \
         jq \
+        yq \
     && rm -rf /var/lib/apt/lists/*
 
 COPY init.sh .

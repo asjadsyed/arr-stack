@@ -10,6 +10,7 @@ JELLYSEERR_URL=http://jellyseerr:5055
 JELLYSEERR_EMAIL="${JELLYSEERR_EMAIL}"
 RADARR_URL="http://radarr:7878"
 SONARR_URL="http://sonarr:8989"
+BAZARR_URL="http://bazarr:6767"
 PROWLARR_URL="http://prowlarr:9696"
 RADARR_CATEGORY="movies"
 SONARR_CATEGORY="shows"
@@ -19,6 +20,8 @@ RADARR_USERNAME="${RADARR_USERNAME}"
 RADARR_PASSWORD="${RADARR_PASSWORD}"
 SONARR_USERNAME="${SONARR_USERNAME}"
 SONARR_PASSWORD="${SONARR_PASSWORD}"
+BAZARR_USERNAME="${BAZARR_USERNAME}"
+BAZARR_PASSWORD="${BAZARR_PASSWORD}"
 PROWLARR_USERNAME="${PROWLARR_USERNAME}"
 PROWLARR_PASSWORD="${PROWLARR_PASSWORD}"
 QBITTORRENT_USERNAME="${QBITTORRENT_USERNAME}"
@@ -47,17 +50,21 @@ while [ ! -f /config/radarr-config/config.xml ]; do sleep 2; done
 RADARR_API_KEY=$(sed -n "s:.*<ApiKey>\\(.*\\)</ApiKey>.*:\\1:p" /config/radarr-config/config.xml)
 while [ ! -f /config/sonarr-config/config.xml ]; do sleep 2; done
 SONARR_API_KEY=$(sed -n "s:.*<ApiKey>\\(.*\\)</ApiKey>.*:\\1:p" /config/sonarr-config/config.xml)
+while [ ! -f /config/bazarr-config/config/config.yaml ]; do sleep 2; done
+BAZARR_API_KEY=$(yq -r '.auth.apikey' /config/bazarr-config/config/config.yaml)
 while [ ! -f /config/prowlarr-config/config.xml ]; do sleep 2; done
 PROWLARR_API_KEY=$(sed -n "s:.*<ApiKey>\\(.*\\)</ApiKey>.*:\\1:p" /config/prowlarr-config/config.xml)
 echo "JELLYSEERR_API_KEY: $JELLYSEERR_API_KEY"
 echo "RADARR_API_KEY: $RADARR_API_KEY"
 echo "SONARR_API_KEY: $SONARR_API_KEY"
+echo "BAZARR_API_KEY: $BAZARR_API_KEY"
 echo "PROWLARR_API_KEY: $PROWLARR_API_KEY"
 
 # curl -fsS --retry 120 --retry-delay 1 --retry-connrefused "$JELLYFIN_URL/System/Info/Public" >/dev/null
 until curl -fsS "$JELLYFIN_URL/health" >/dev/null; do sleep 1; done
 until curl -fsS -H "X-Api-Key: $RADARR_API_KEY" "$RADARR_URL/api/v3/system/status" >/dev/null; do sleep 1; done
 until curl -fsS -H "X-Api-Key: $SONARR_API_KEY" "$SONARR_URL/api/v3/system/status" >/dev/null; do sleep 1; done
+until curl -fsS -H "X-Api-Key: $BAZARR_API_KEY" "$BAZARR_URL/api/system/status" >/dev/null; do sleep 1; done
 until curl -fsS -H "X-Api-Key: $PROWLARR_API_KEY" "$PROWLARR_URL/api/v1/system/status" >/dev/null; do sleep 1; done
 
 JELLYFIN_STARTUP_WIZARD_COMPLETED=$(sed -n "s:.*<IsStartupWizardCompleted>\\(.*\\)</IsStartupWizardCompleted>.*:\\1:p" /config/jellyfin-config/system.xml)
@@ -248,6 +255,7 @@ APPS=(
   "Jellyseerr"
   "Radarr"
   "Sonarr"
+  "Bazarr"
 )
 
 # 3) List keys and create if missing
@@ -274,6 +282,7 @@ done
 echo "${JELLYFIN_API_KEYS["Jellyseerr"]}"
 echo "${JELLYFIN_API_KEYS["Radarr"]}"
 echo "${JELLYFIN_API_KEYS["Sonarr"]}"
+echo "${JELLYFIN_API_KEYS["Bazarr"]}"
 
 # # Use the returned key with:
 # #   curl -fsS "$JELLYFIN_URL/Sessions" -H "X-MediaBrowser-Token: <API_KEY>"
@@ -359,7 +368,20 @@ curl -fsS "$JELLYSEERR_URL/api/v1/settings/jellyfin/sync" \
 # curl -fsS "$JELLYSEERR_URL/api/v1/settings/jellyfin/library?sync=true" -b "$COOKIE_JAR" | jq
 LIBRARY_IDS=$(curl -fsS "$JELLYSEERR_URL/api/v1/settings/jellyfin/library?sync=true" -b "$COOKIE_JAR" | jq -r '.[].id' | paste -sd, -)
 echo "$LIBRARY_IDS"
-curl -fsS "$JELLYSEERR_URL/api/v1/settings/jellyfin/library?sync=true&enable=$LIBRARY_IDS" -b "$COOKIE_JAR"
+JELLYFIN_LIBRARIES=$(curl -fsS "$JELLYSEERR_URL/api/v1/settings/jellyfin/library?sync=true&enable=$LIBRARY_IDS" -b "$COOKIE_JAR")
+
+declare -A JELLYFIN_LIBRARY_IDS_BY_NAME
+while IFS= read -r -d '' name && IFS= read -r -d '' id; do
+  JELLYFIN_LIBRARY_IDS_BY_NAME["$name"]="$id"
+done < <(jq -j '.[] | (.name, "\u0000", .id, "\u0000")' <<< "$JELLYFIN_LIBRARIES")
+MOVIES_LIBRARY_ID="${JELLYFIN_LIBRARY_IDS_BY_NAME["Movies"]}"
+SHOWS_LIBRARY_ID="${JELLYFIN_LIBRARY_IDS_BY_NAME["Shows"]}"
+
+echo "JELLYFIN_LIBRARY_IDS_BY_NAME:"
+for name in "${!JELLYFIN_LIBRARY_IDS_BY_NAME[@]}"; do
+  echo "$name => ${JELLYFIN_LIBRARY_IDS_BY_NAME[$name]}"
+done
+
 # exit
 
 # curl -fsS "$JELLYSEERR_URL/api/v1/settings/jellyfin/library?enable=f137a2dd21bbc1b99aa5c0f6bf02a805,a656b907eb3a73532e40e44b968d0225" -b "$COOKIE_JAR"
@@ -1075,6 +1097,86 @@ fi
 
 set -x
 echo "Done adding indexers to Prowlarr, re-enabling xtrace"
+
+# Settings > Providers
+curl -fsS "$BAZARR_URL/api/system/settings" \
+  -X POST \
+  -H "X-API-KEY: $BAZARR_API_KEY" \
+  -F "settings-general-enabled_providers=gestdown" \
+  -F "settings-general-enabled_providers=yifysubtitles" \
+  -F "settings-general-enabled_providers=tvsubtitles"
+
+# Settings > Radarr
+curl -fsS "$BAZARR_URL/api/system/settings" \
+  -X POST \
+  -H "X-API-KEY: $BAZARR_API_KEY" \
+  -F "settings-general-use_radarr=true" \
+  -F "settings-radarr-ip=radarr" \
+  -F "settings-radarr-apikey=$RADARR_API_KEY"
+
+# Settings > Sonarr
+curl -fsS "$BAZARR_URL/api/system/settings" \
+  -X POST \
+  -H "X-API-KEY: $BAZARR_API_KEY" \
+  -F "settings-general-use_sonarr=true" \
+  -F "settings-sonarr-ip=sonarr" \
+  -F "settings-sonarr-apikey=$SONARR_API_KEY"
+
+# Settings > Jellyfin
+curl -fsS "$BAZARR_URL/api/system/settings" \
+  -X POST \
+  -H "X-API-KEY: $BAZARR_API_KEY" \
+  -F "settings-general-use_jellyfin=true" \
+  -F "settings-jellyfin-url=$JELLYFIN_URL" \
+  -F "settings-jellyfin-apikey=${JELLYFIN_API_KEYS["Bazarr"]}" \
+  -F "settings-jellyfin-movie_library=Movies" \
+  -F "settings-jellyfin-movie_library_ids=$MOVIES_LIBRARY_ID" \
+  -F "settings-jellyfin-series_library=Shows" \
+  -F "settings-jellyfin-series_library_ids=$SHOWS_LIBRARY_ID"
+
+# Refresh movie metadata after downloading subtitles
+# Refresh series metadata after downloading subtitles
+curl -fsS "$BAZARR_URL/api/system/settings" \
+  -X POST \
+  -H "X-API-KEY: $BAZARR_API_KEY" \
+  -F "settings-jellyfin-update_movie_library=true" \
+  -F "settings-jellyfin-update_series_library=true"
+
+# Settings > Languages
+BAZARR_LANGUAGE_PROFILES='[{"profileId":1,"name":"English Language Profile","items":[{"id":1,"language":"en","audio_exclude":"False","audio_only_include":"False","hi":"False","forced":"False"}],"cutoff":null,"mustContain":[],"mustNotContain":[],"originalFormat":false}]'
+curl -fsS "$BAZARR_URL/api/system/settings" \
+  -X POST \
+  -H "X-API-KEY: $BAZARR_API_KEY" \
+  -F "languages-enabled=en" \
+  -F "languages-profiles=$BAZARR_LANGUAGE_PROFILES"
+
+# Default Language Profiles For Newly Added Shows
+curl -fsS "$BAZARR_URL/api/system/settings" \
+  -X POST \
+  -H "X-API-KEY: $BAZARR_API_KEY" \
+  -F "settings-general-serie_default_enabled=true" \
+  -F "settings-general-serie_default_profile=1" \
+  -F "settings-general-movie_default_enabled=true" \
+  -F "settings-general-movie_default_profile=1"
+
+# Settings > Subtitles
+
+# Embedded Subtitles Handling
+# Disable Treat Embedded Subtitles as Downloaded
+curl -fsS "$BAZARR_URL/api/system/settings" \
+  -X POST \
+  -H "X-API-KEY: $BAZARR_API_KEY" \
+  -F "settings-general-use_embedded_subs=false"
+
+# Settings > General
+
+# Security
+curl -fsS "$BAZARR_URL/api/system/settings" \
+  -X POST \
+  -H "X-API-KEY: $BAZARR_API_KEY" \
+  -F "settings-auth-type=form" \
+  -F "settings-auth-username=$BAZARR_USERNAME" \
+  -F "settings-auth-password=$BAZARR_PASSWORD"
 
 echo "Finished init"
 # sleep to allow docker exec'ing into for debugging
