@@ -74,7 +74,7 @@ services:
     restart: unless-stopped
 
   subgen:
-    image: mccloud/subgen:2026.07.3@sha256:2841515a3b409677669f0a10d77d49160bffb8111db91640fb33a4db06b3396c
+    image: mccloud/subgen:2026.07.3-cpu@sha256:d26f285ee7ab1f48d45a6b5aea7c1b1f999b16c3770b71eee10e8602ae374cc5
     container_name: subgen
     environment:
       - PUID=1000
