@@ -26,8 +26,8 @@ services:
       - "host.docker.internal:host-gateway"
     healthcheck:
       test: ["CMD-SHELL", "curl -fsS --max-time 5 http://127.0.0.1:8096/health >/dev/null || exit 1"]
-      interval: 30s
-      timeout: 6s
+      interval: 5s
+      timeout: 5s
       retries: 5
       start_period: 45s
 
@@ -73,9 +73,33 @@ services:
       - ${ROOT_DIR_OVERRIDE:-./root}/data:/data
     restart: unless-stopped
 
+  subgen:
+    image: mccloud/subgen:2026.07.3@sha256:2841515a3b409677669f0a10d77d49160bffb8111db91640fb33a4db06b3396c
+    container_name: subgen
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/New_York
+      - WHISPER_MODEL=small
+      - CONCURRENT_TRANSCRIPTIONS=1
+    # ports:
+    #   - 9000:9000
+    volumes:
+      - subgen-cache:/subgen/models
+      - ${ROOT_DIR_OVERRIDE:-./root}/data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS --max-time 10 http://127.0.0.1:9000/status >/dev/null || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 0s
+
   bazarr:
     image: lscr.io/linuxserver/bazarr:v1.6.0-ls363@sha256:84b6f05a7a4194fafe5a0bec062d32f6ae9ea74db33d43d678cb9a3191f31c24
     container_name: bazarr
+    depends_on:
+      subgen: { condition: service_healthy }
     environment:
       - PUID=1000
       - PGID=1000
@@ -150,6 +174,7 @@ services:
       jellyseerr: { condition: service_started }
       radarr: { condition: service_started }
       sonarr: { condition: service_started }
+      subgen: { condition: service_healthy }
       bazarr: { condition: service_started }
       prowlarr: { condition: service_started }
       qbittorrent: { condition: service_started }
@@ -188,6 +213,7 @@ volumes:
   jellyseerr-config:
   radarr-config:
   sonarr-config:
+  subgen-cache:
   bazarr-config:
   # lidarr-config:
   prowlarr-config:
